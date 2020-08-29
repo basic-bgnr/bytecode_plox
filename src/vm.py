@@ -1,11 +1,30 @@
 from opcodes import OpCode
+from values import MasterData, LanguageTypes
 
 class Vm:
     def __init__(self, chunk):
         self.chunk = chunk
-        self.stack = []
+        self.stack = [] # constainer for MasterData
         self.ip = 0
 
+    def reportError(self, message):
+        raise Exception(f"VM error: {message}\nAt line: {self.getCurrentInstructionLine()}")
+
+    def assertTypeEquality(self, op1, op2):
+        if (op1.tipe == op2.tipe):
+            return
+        #op1.tipe.name, here .name can be called on `Enum` types to print their actual name
+        self.reportError(f"type mismatch between the following:\n1. {op1}\n2. {op2}\nExpecting type: {op1.tipe.name}\nFound type: {op2.tipe.name}")
+
+    def assertType(self, op1, tipe):
+        if (op1.tipe == tipe):
+            return
+        self.reportError(f"operation can't be performed on: \n{op1}\nExpecting type: {tipe.name}\nFound type: {op1.tipe.name}")
+
+    def assertOptionalTypes(self, op1, *tipes):
+        if (op1.tipe in tipes):
+            return
+        self.reportError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
     def run(self):
         while current_op_code := self.getOpCode():
@@ -17,34 +36,143 @@ class Vm:
                 self.pushStack(self.loadConstant())
 
             elif (current_op_code == OpCode.OP_ADD):
-                op1 = self.popStack()
-                op2 = self.popStack()
+                op1 = self.popStack() #MasterData
+                op2 = self.popStack() #MasterData
 
-                self.pushStack(op1 + op2)
+                self.assertOptionalTypes(op1, LanguageTypes.NUMBER, LanguageTypes.STRING)
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=op1.tipe, value = op1.value + op2.value)
+
+                self.pushStack(output)
 
             elif (current_op_code == OpCode.OP_SUB):
                 op1 = self.popStack()
-                op2 = self.popStack() 
+                op2 = self.popStack()
 
-                self.pushStack(op1 - op2)
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=op1.tipe, value = op1.value - op2.value)
+
+                self.pushStack(output)
 
             elif (current_op_code == OpCode.OP_MUL):
                 op1 = self.popStack()
                 op2 = self.popStack()
 
-                self.pushStack(op1 * op2)
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=op1.tipe, value = op1.value * op2.value)
+
+                self.pushStack(output)
 
             elif (current_op_code == OpCode.OP_DIV):
                 op1 = self.popStack() 
                 op2 = self.popStack()
 
-                self.pushStack(op1 / op2)
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
 
+                output = MasterData(tipe=op1.tipe, value = op1.value / op2.value)
+
+                self.pushStack(output)
+
+            ##################################################################################################
+            elif (current_op_code == OpCode.OP_EQUAL):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value == op2.value)
+
+                self.pushStack(output)
+
+            elif (current_op_code == OpCode.OP_LESS):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value < op2.value)
+                self.pushStack(output)
+
+            elif (current_op_code == OpCode.OP_LESS_EQUAL):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
+               
+                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value <= op2.value)
+                self.pushStack(output)
+
+            elif (current_op_code == OpCode.OP_GREATER):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
+                
+                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value > op2.value)
+                self.pushStack(output)
+
+            elif (current_op_code == OpCode.OP_GREATER_EQUAL):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.NUMBER)
+                self.assertTypeEquality(op1, op2)
+                
+                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value >= op2.value)
+                self.pushStack(output)
+
+            ##################################################################################################
+            elif (current_op_code == OpCode.OP_AND):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.BOOLEAN)
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=op1.tipe, value = op1.value and op2.value)
+
+                self.pushStack(output)
+
+            elif (current_op_code == OpCode.OP_OR):
+                op1 = self.popStack() 
+                op2 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.BOOLEAN)
+                self.assertTypeEquality(op1, op2)
+
+                output = MasterData(tipe=op1.tipe, value = op1.value or op2.value)
+
+                self.pushStack(output)
+
+            ##################################################################################################
             elif (current_op_code == OpCode.OP_NEG):
                 op1 = self.popStack()
-                self.pushStack(-op1)
+
+                self.assertType(op1, LanguageTypes.NUMBER)
+                output = MasterData(tipe=op1.tipe, value = -op1.value)
+
+                self.pushStack(output)
+
+            elif (current_op_code == OpCode.OP_NOT):
+                op1 = self.popStack()
+
+                self.assertType(op1, LanguageTypes.BOOLEAN)
+                output = MasterData(tipe=op1.tipe, value = not op1.value)
+
+                self.pushStack(output)
+            ##################################################################################################
+
         
-        print('computed ', self.stack)
+        print('computed ', [str(v) for v in self.stack])
 
     def getOpCode(self):
         if (not self.isAtEnd()):
@@ -70,3 +198,6 @@ class Vm:
     def pushStack(self, value):
         # print('pushing ', self.stack)
         self.stack.append(value)
+
+    def getCurrentInstructionLine(self):
+        return self.chunk.lineAt(self.ip-1) #ip is already advance before the instruction is run 

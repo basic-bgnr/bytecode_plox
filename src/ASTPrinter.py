@@ -5,7 +5,9 @@ class ASTPrinter:
         return '\n'.join([self.print(entity) for entity in entities])
 
     def print(self, entity):
-        return entity.linkVisitor(self)
+        if entity is not  None:
+            return entity.linkVisitor(self)
+        return ""
 
     def visitGetExpression(self, get_expression):
         return f"(get {self.print(get_expression.expr)}.{get_expression.prop_or_method.literal})"
