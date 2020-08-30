@@ -8,6 +8,8 @@ class Chunk:
        
         self.lines = []#for determining the souce of error
 
+        self.constants = []
+        # todo: implement the following for improving performance 
         self.constants = [LanguageConstants.TRUE, LanguageConstants.FALSE, LanguageConstants.NIL]#container for literal value
         self._constant_map = defaultdict(lambda : None, {constant: index for index, constant in enumerate(self.constants)})# key: constant, value: index,=> self.constants[self._constant_map[key]]
 
@@ -15,6 +17,14 @@ class Chunk:
     def push(self, opcode, at_line):
         self.codes.append(opcode)
         self.lines.append(at_line)
+
+    def pushOpCode(self, op_code, at_line):
+        self.codes.append(op_code)
+        self.lines.append(at_line)
+
+    def pushOpCodes(self, op_code1, op_code2, at_line):
+        self.pushOpCode(op_code1, at_line)
+        self.pushOpCode(op_code2, at_line)
 
     def codeAt(self, index):
         return self.codes[index]
@@ -24,6 +34,11 @@ class Chunk:
 
     def lineAt(self, index):
         return self.lines[index]
+
+    def makeConstant(self, constant):
+        self.constants.append(constant)
+        index = len(self.constants) - 1
+        return index
 
     def pushConstant(self, constant, at_line):
         #constant is not directly used as key, because it's a instantiated class which gives different value when instantiated
@@ -44,18 +59,17 @@ class Chunk:
         elif(self._constant_map[constant.value] is not None):
             index = self._constant_map[constant.value] 
         else:
-            self.constants.append(constant)
-            index = len(self.constants) - 1
+            index = self.makeConstant(constant)
             self._constant_map[constant.value] = index
 
-
-        self.push(opcode=OpCode.OP_CONSTANT, at_line = at_line)
-        self.push(opcode=index, at_line = at_line)
+        self.pushOpCodes(OpCode.OP_CONSTANT, index, at_line)
         
         return index
 
-
-
+        # if any error, try the following
+        # index = self.makeConstant(constant)
+        # self.pushOpCodes(OpCode.OP_CONSTANT, index, at_line)      
+        # return index
 
 def test():
     

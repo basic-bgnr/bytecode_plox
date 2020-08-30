@@ -21,3 +21,10 @@ class OpCode(Enum):
 	OP_OR  = auto(),
 
 	OP_NOT = auto(),
+
+	OP_PRINT = auto(),
+
+	OP_POP = auto()
+
+	OP_DEFINE_GLOBAL = auto(),
+	OP_LOAD_GLOBAL = auto(),

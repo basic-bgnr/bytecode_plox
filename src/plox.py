@@ -45,10 +45,10 @@ class Lox:
     def runPrompt(lox_interpreter):
         while True:
             print(lox_interpreter.prompt_signature, end=' ')
-            try:
-                lox_interpreter.run(input())
-            except Exception as e: 
-                print(f"{e}")
+            # try:
+            lox_interpreter.run(input())
+            # except Exception as e: 
+                # print(f"{e}")
     
     def run(self, source_code):
         #why this runs, its because of the lox interpreter environment, which remains in existence even after this function ends 
@@ -62,7 +62,7 @@ class Lox:
         print(ASTPrinter().printAll(parser.AST))
         print("########################################################################")
         compiler = Compiler()
-        compiler.compile(parser.AST[0])
+        compiler.compileAll(parser.AST)
 
         disassembler = Disassembler(compiler.chunk)
         print("#############################ByteCode###################################")
@@ -71,7 +71,7 @@ class Lox:
 
         vm = Vm(compiler.chunk)
 
-        print(f"=> {vm.run().value}")
+        vm.run()
 
 
     def error(self, line, err_msg):

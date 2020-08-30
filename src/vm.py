@@ -7,8 +7,13 @@ class Vm:
         self.stack = [] # constainer for MasterData
         self.ip = 0
 
+        self.table = {} #storing reference to
+
+    def reportVMError(self, message):
+        raise Exception(f"VM ERROR\n{message}\nAt line: {self.getCurrentInstructionLine()}")
+
     def reportError(self, message):
-        raise Exception(f"VM error: {message}\nAt line: {self.getCurrentInstructionLine()}")
+        raise Exception(f"{message}\nAt line: {self.getCurrentInstructionLine()}")
 
     def assertTypeEquality(self, op1, op2):
         if (op1.tipe == op2.tipe):
@@ -171,8 +176,49 @@ class Vm:
                 self.pushStack(output)
             ##################################################################################################
 
+            elif (current_op_code == OpCode.OP_PRINT):
+                #the last value of the stack is popped because the very essence of statement is that 
+                # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
+                # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
+                op = self.popStack()
+                print(op.value)
+
+
+
+            elif (current_op_code == OpCode.OP_POP):
+                self.popStack()
+
+
+
+            elif (current_op_code == OpCode.OP_PRINT):
+                #the last value of the stack is popped because the very essence of statement is that 
+                # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
+                # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
+                op = self.popStack()
+                print(op.value)
+
+            elif (current_op_code == OpCode.OP_DEFINE_GLOBAL):
+                variable_name = self.loadConstant()
+                # when variable = expr is defined, expr pushes one value in the stack, 
+                # assignment statement pops the value from the stack making the whole 
+                # process producing no changes in the stack
+                return_value = self.popStack()  
+                self.table[variable_name.value] = return_value
+
+                # print('op_code define ', self.table)
+
+            elif (current_op_code == OpCode.OP_LOAD_GLOBAL):
+                variable_name = self.loadConstant()
+                try:
+                    ret_value = self.table[variable_name.value]
+                    self.pushStack(ret_value) #the net effect is that op_load_global pushes one value in the stack
+                except KeyError as e:
+                    self.reportError(f"variable `{variable_name} is not defined")
+
+            else:
+                self.reportVMError(f"unknown op_code {current_op_code.name}")
         
-        print('computed ', [str(v) for v in self.stack])
+        #print('computed ', [str(v) for v in self.stack])
 
     def getOpCode(self):
         if (not self.isAtEnd()):
