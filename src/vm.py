@@ -2,7 +2,7 @@ from opcodes import OpCode
 from values import MasterData, LanguageTypes
 
 class Vm:
-    def __init__(self, chunk):
+    def __init__(self, chunk=None):
         self.chunk = chunk
         self.stack = [] # constainer for MasterData
         self.ip = 0
@@ -31,7 +31,11 @@ class Vm:
             return
         self.reportError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
-    def run(self):
+    def run(self, chunk=None):
+        if chunk is not None:
+            self.chunk = chunk
+            self.ip = 0
+
         while current_op_code := self.getOpCode():
 
             if (current_op_code == OpCode.OP_RETURN):
@@ -213,7 +217,7 @@ class Vm:
                     ret_value = self.table[variable_name.value]
                     self.pushStack(ret_value) #the net effect is that op_load_global pushes one value in the stack
                 except KeyError as e:
-                    self.reportError(f"variable `{variable_name} is not defined")
+                    self.reportError(f"variable `{variable_name.value}` is not defined")
 
             else:
                 self.reportVMError(f"unknown op_code {current_op_code.name}")
