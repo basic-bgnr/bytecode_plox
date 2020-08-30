@@ -27,6 +27,7 @@ class Lox:
 
         else:
             Lox.runPrompt(Vm())
+            # Lox.runDebugPrompt(Vm())
 
     @staticmethod
     def runFileInteractive(path, vm):
@@ -38,6 +39,7 @@ class Lox:
         with open(path, mode='r') as content:
             source_code = content.read()
             Lox.run(source_code, vm)
+            # Lox.debugRun(source_code, vm)
         ### add interpreter in prompt mode after this. if necessary arguments are passed
     
     @staticmethod
@@ -49,7 +51,14 @@ class Lox:
                 Lox.run(f"{input_source};", vm)
             except Exception as e: 
                 print(f"{e}")
-   
+
+    @staticmethod
+    def runDebugPrompt(vm):
+        while True:
+            print(Lox.prompt_signature, end=' ')
+            input_source = input()
+            Lox.debugRun(f"{input_source};", vm)
+            
     @staticmethod
     def run(source_code, vm):
         #why this runs, its because of the lox interpreter environment, which remains in existence even after this function ends 
