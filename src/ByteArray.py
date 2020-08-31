@@ -36,8 +36,16 @@ class Chunk:
         return self.lines[index]
 
     def makeConstant(self, constant):
+        index = self._constant_map[constant]
+        if  index is not None: 
+            return index
+        return self.addConstant(constant)
+
+    #add the constant without any checks
+    def addConstant(self, constant):
         self.constants.append(constant)
         index = len(self.constants) - 1
+        self._constant_map[constant] = index 
         return index
 
     def pushConstant(self, constant, at_line):
@@ -53,15 +61,8 @@ class Chunk:
         #     index = self._constant_map[constant.values]
         # breakpoint()
         #this is a major source of error
-        if (self._constant_map[constant] is not None): #check if nil, true, false is supplied
-            index = self._constant_map[constant]
-            
-        elif(self._constant_map[constant.value] is not None):
-            index = self._constant_map[constant.value] 
-        else:
-            index = self.makeConstant(constant)
-            self._constant_map[constant.value] = index
-
+       
+        index = self.makeConstant(constant)
         self.pushOpCodes(OpCode.OP_LOAD_CONSTANT, index, at_line)
         
         return index

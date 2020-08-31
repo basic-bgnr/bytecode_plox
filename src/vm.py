@@ -247,7 +247,7 @@ class Vm:
             else:
                 self.reportVMError(f"unknown op_code {current_op_code.name}")
         
-        # print('computed ', [str(v) for v in self.stack])
+        print('computed ', [str(v) for v in self.stack])
 
     def getOpCode(self):
         if (not self.isAtEnd()):
