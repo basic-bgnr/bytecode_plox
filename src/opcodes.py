@@ -28,3 +28,4 @@ class OpCode(Enum):
 
 	OP_DEFINE_GLOBAL = auto(),
 	OP_LOAD_GLOBAL = auto(),
+	OP_REASSIGN_GLOBAL = auto(),

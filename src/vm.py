@@ -219,6 +219,19 @@ class Vm:
                 except KeyError as e:
                     self.reportError(f"variable `{variable_name.value}` is not defined")
 
+            elif (current_op_code == OpCode.OP_REDEFINE_GLOBAL):
+                variable_name = self.loadConstant()
+                # when variable = expr is defined, expr pushes one value in the stack, 
+                # assignment statement pops the value from the stack making the whole 
+                # process producing no changes in the stack
+                return_value = self.popStack()
+                try:
+                    self.table[variable_name.value] = return_value
+                except KeyError:
+                    self.reportError(f"variable `{variable_name.value}` needs to be declared before using")
+
+                # print('op_code define ', self.table)
+
             else:
                 self.reportVMError(f"unknown op_code {current_op_code.name}")
         

@@ -153,4 +153,16 @@ class Compiler:
 
 		self.chunk.pushOpCodes(OpCode.OP_DEFINE_GLOBAL, global_variable_index, at_line=line_num)
 
+	def visitReassignmentStatement(self, reassignment_statement):
+		line_num = self.compile(reassignment_statement.rvalue)
 
+		##find out the lvalue string and enter it inside the chunk constant pool
+		lvalue_name = MasterData(tipe=LanguageTypes.STRING, value=reassignment_statement.lvalue.expr.literal)
+
+		global_variable_index = self.chunk.makeConstant(lvalue_name)
+		
+		# self.chunk.push(OpCode.OP_DEFINE_GLOBAL, at_line=line_num)
+		# self.chunk.push(global_variable_index, at_line=line_num)
+
+
+		self.chunk.pushOpCodes(OpCode.OP_REDEFINE_GLOBAL, global_variable_index, at_line=line_num)

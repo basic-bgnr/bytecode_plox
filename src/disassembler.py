@@ -13,7 +13,7 @@ class Disassembler:
             while ( val := next(op_code_iterator) ):
                 current_opcode, current_line = val
                 
-                if (current_opcode in [OpCode.OP_CONSTANT, OpCode.OP_DEFINE_GLOBAL, OpCode.OP_LOAD_GLOBAL]):
+                if (current_opcode in [OpCode.OP_CONSTANT, OpCode.OP_DEFINE_GLOBAL, OpCode.OP_LOAD_GLOBAL, OpCode.OP_REDEFINE_GLOBAL,]):
                     index, current_line = next(op_code_iterator) #consume the next value of the code that contains the index of the constant
                     value = self.chunk.constantAt(index)
                     # print(index, "---", type(value), '---', value.value, value.tipe)
