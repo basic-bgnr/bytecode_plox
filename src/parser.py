@@ -227,11 +227,7 @@ class Parser:
         #here order is important, expression statement must come at last 
         if (expression_statement := self.expressionStatement()):
             return expression_statement
-
-        
-
-        raise Exception(f'Invalid statement at line {self.peek().line}')
-
+            
 
     def classStatement(self):
         # print('in class statement')
@@ -511,20 +507,25 @@ class Parser:
 
 
     def literalExpr(self): # this needs to add support for bracketed expr or(group expression) as they have the same precedence as the literal number
+        # print('inside_literal_expr')
         if (anon_function  := self.anonFunctionExpr()):
             return anon_function
         if (self.peek().tipe in [TokenType.STRING, TokenType.NUMBER, TokenType.IDENTIFIER, TokenType.TRUE, TokenType.FALSE, TokenType.THIS, TokenType.NIL]):
+            # print('inside_literal_expr string number ... cont')
             literal_expr = self.advance()
             # print('literalExpr ', literal_expr.literal)
             return LiteralExpression(literal_expr)
-        elif (self.peek().tipe == TokenType.LEFT_PAREN):
+        if (self.peek().tipe == TokenType.LEFT_PAREN):
+            # print('inside_literal_expr paren')
             self.advance() # consume the '(' token
             group_expr = self.parseExpr()
             if (self.peek().tipe == TokenType.RIGHT_PAREN):
                 self.advance() # consume the ')' token
                 return group_expr
             else:
-                Exception(f'error no matching parenthesis found at {self.peek().line}') #exception needs to be raised here
+                raise Exception(f'error no matching parenthesis found at {self.peek().line}') #exception needs to be raised here
+
+
 
     def anonFunctionExpr(self): # anon function declaration expression
         # To do: needs to check user program for error in the following code 

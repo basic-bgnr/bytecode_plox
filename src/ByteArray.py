@@ -62,7 +62,7 @@ class Chunk:
             index = self.makeConstant(constant)
             self._constant_map[constant.value] = index
 
-        self.pushOpCodes(OpCode.OP_CONSTANT, index, at_line)
+        self.pushOpCodes(OpCode.OP_LOAD_CONSTANT, index, at_line)
         
         return index
 

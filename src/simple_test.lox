@@ -1,0 +1,11 @@
+var a = 1;
+
+{
+	var a = a;
+	print a;
+
+	a = 23;
+	print a;
+};
+
+print a;

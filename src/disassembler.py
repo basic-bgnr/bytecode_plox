@@ -13,10 +13,14 @@ class Disassembler:
             while ( val := next(op_code_iterator) ):
                 current_opcode, current_line = val
                 
-                if (current_opcode in [OpCode.OP_CONSTANT, OpCode.OP_DEFINE_GLOBAL, OpCode.OP_LOAD_GLOBAL, OpCode.OP_REDEFINE_GLOBAL,]):
+                if (current_opcode in [OpCode.OP_LOAD_CONSTANT, OpCode.OP_DEFINE_GLOBAL, OpCode.OP_LOAD_GLOBAL, OpCode.OP_REDEFINE_GLOBAL]):
                     index, current_line = next(op_code_iterator) #consume the next value of the code that contains the index of the constant
                     value = self.chunk.constantAt(index)
-                    # print(index, "---", type(value), '---', value.value, value.tipe)
+                    return_string.append( self.toString(current_line, f"{current_opcode.name}", f"[{index}]" , f"{value}" ) )
+
+                elif (current_opcode in [OpCode.OP_LOAD_LOCAL, OpCode.OP_SET_LOCAL]):
+                    index, current_line = next(op_code_iterator) #consume the next value of the code that contains the index of the constant
+                    value = '[...]'
                     return_string.append( self.toString(current_line, f"{current_opcode.name}", f"[{index}]" , f"{value}" ) )
                 else:
                     return_string.append( self.toString(current_line, f"{current_opcode.name}") )
@@ -33,3 +37,5 @@ class Disassembler:
             optional_string += f" {option:>4} "
 
         return f"{line_number:>04} {op_code:<18}" + optional_string
+
+        # return str(line_number) + op_code + optional_string

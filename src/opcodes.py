@@ -3,7 +3,7 @@ from enum import Enum, auto
 
 class OpCode(Enum):
 	OP_RETURN = auto(),
-	OP_CONSTANT = auto(),
+	OP_LOAD_CONSTANT = auto(),
 	
 	OP_ADD = auto(),
 	OP_SUB = auto(),
@@ -28,4 +28,7 @@ class OpCode(Enum):
 
 	OP_DEFINE_GLOBAL = auto(),
 	OP_LOAD_GLOBAL = auto(),
-	OP_REASSIGN_GLOBAL = auto(),
+	OP_REDEFINE_GLOBAL = auto(),
+
+	OP_LOAD_LOCAL = auto(),
+	OP_SET_LOCAL = auto(),

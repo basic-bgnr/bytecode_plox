@@ -41,7 +41,7 @@ class Vm:
             if (current_op_code == OpCode.OP_RETURN):
                 return self.stack.pop()
 
-            elif (current_op_code == OpCode.OP_CONSTANT):
+            elif (current_op_code == OpCode.OP_LOAD_CONSTANT):
                 self.pushStack(self.loadConstant())
 
             elif (current_op_code == OpCode.OP_ADD):
@@ -199,7 +199,7 @@ class Vm:
                 # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
                 # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
                 op = self.popStack()
-                print(op.value)
+                # print(op.value)
 
             elif (current_op_code == OpCode.OP_DEFINE_GLOBAL):
                 variable_name = self.loadConstant()
@@ -231,11 +231,23 @@ class Vm:
                     self.reportError(f"variable `{variable_name.value}` needs to be declared before using")
 
                 # print('op_code define ', self.table)
+            elif (current_op_code == OpCode.OP_LOAD_LOCAL):
+                stack_entry_index = self.getByte()
+                # when variable = expr is defined, expr pushes one value in the stack, 
+                # assignment statement pops the value from the stack making the whole 
+                # process producing no changes in the stack
+                value = self.stack[stack_entry_index]
+
+                self.pushStack(value)
+
+            elif (current_op_code == OpCode.OP_SET_LOCAL):
+                stack_entry_index = self.getByte()
+                self.stack[stack_entry_index] = self.popStack()
 
             else:
                 self.reportVMError(f"unknown op_code {current_op_code.name}")
         
-        #print('computed ', [str(v) for v in self.stack])
+        # print('computed ', [str(v) for v in self.stack])
 
     def getOpCode(self):
         if (not self.isAtEnd()):
@@ -250,17 +262,21 @@ class Vm:
     def advance(self):
         self.ip += 1
 
+    def getByte(self):
+        return self.getOpCode()
+
     def loadConstant(self):
-        index = self.getOpCode()
+        index = self.getByte()
         return self.chunk.constantAt(index)
 
     def popStack(self):
-        # print('popping ', self.stack)
+        # print(self.ip, ' popping ', f"{self.stack}")
         return self.stack.pop()
 
     def pushStack(self, value):
-        # print('pushing ', self.stack)
+        
         self.stack.append(value)
+        # print(self.ip, ' pushing ', self.stack)
 
     def getCurrentInstructionLine(self):
         return self.chunk.lineAt(self.ip-1) #ip is already advance before the instruction is run 

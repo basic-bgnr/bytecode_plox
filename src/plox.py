@@ -23,7 +23,8 @@ class Lox:
                     -i: run files in interactive mode''')
             exit(64) #see open_bsd exit code (just for standardization)
         elif len(sys.argv) == 2:
-            Lox.runFile(sys.argv[1], Vm())
+            # Lox.runFile(sys.argv[1], Vm())
+            Lox.runDebugFile(sys.argv[1], Vm())
 
         else:
             Lox.runPrompt(Vm())
@@ -33,6 +34,12 @@ class Lox:
     def runFileInteractive(path, vm):
         Lox.runFile(path, vm)
         Lox.runPrompt(vm)
+
+    @staticmethod
+    def runDebugFile(path, vm):
+        with open(path, mode='r') as content:
+            source_code = content.read()
+            Lox.debugRun(source_code, vm)
 
     @staticmethod
     def runFile(path, vm):
