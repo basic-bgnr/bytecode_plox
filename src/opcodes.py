@@ -32,3 +32,7 @@ class OpCode(Enum):
 
 	OP_LOAD_LOCAL = auto(),
 	OP_SET_LOCAL = auto(),
+
+
+	OP_JMP_IF_FALSE = auto(),
+	OP_JMP = auto(),

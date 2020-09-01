@@ -1,6 +1,6 @@
 from opcodes import OpCode
 from values import MasterData, LanguageTypes
-
+#Note: The vm's ip counter always points at the next instruction to execute
 class Vm:
     def __init__(self, chunk=None):
         self.chunk = chunk
@@ -244,6 +244,20 @@ class Vm:
                 stack_entry_index = self.getByte()
                 self.stack[stack_entry_index] = self.popStack()
 
+            elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
+                offset = self.getByte() # get the else condition instruction pointer
+                condition = self.popStack() # pop the condition from stack, the net result of the statement is nullified
+                #condition must be of type BOOLEAN
+                self.assertType(condition, LanguageTypes.BOOLEAN)
+                # the following comparison can be done by directly comparing language constant, but for now we are using python native
+                if condition.value == False:
+                    self.offsetIP(offset)
+
+            elif (current_op_code == OpCode.OP_JMP):
+                offset = self.getByte() # get the else condition instruction pointer
+                self.offsetIP(offset)
+
+
             else:
                 self.reportVMError(f"unknown op_code {current_op_code.name}")
         
@@ -255,6 +269,10 @@ class Vm:
             self.advance()
             return ret_value
         return None
+
+    def offsetIP(self, offset):
+        self.ip += offset
+
 
     def isAtEnd(self):
         return len(self.chunk.codes) <= self.ip

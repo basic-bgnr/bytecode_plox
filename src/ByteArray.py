@@ -26,10 +26,17 @@ class Chunk:
         self.pushOpCode(op_code1, at_line)
         self.pushOpCode(op_code2, at_line)
 
+    def getCodesLength(self):
+        return len(self.codes) # returns addressable index(this doesn't need subtraction, can be directly indexed)
+
+    def pushOpCodeAt(self, op_code, index):
+        self.codes[index] = op_code
+
     def codeAt(self, index):
         return self.codes[index]
 
     def constantAt(self, index):
+        # print('index ', index)
         return self.constants[index]
 
     def lineAt(self, index):
