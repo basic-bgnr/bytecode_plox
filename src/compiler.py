@@ -303,7 +303,7 @@ class Compiler:
 		
 		
 		self.emitCode(OpCode.OP_JMP_IF_FALSE, line_num)
-		self.emitByte(None, line_num)# just some random byte, we'll fill it up with true value one the 
+		self.emitByte(None, line_num)# just some random byte, we'll fill it up with true value once the conditional statements are compiled
 
 		branch_if_start_instruction_pointer = self.getInstructionPointerSize()-1 # this points to the above byte
 
@@ -341,3 +341,25 @@ class Compiler:
 			self.emitByteAt(byte=offset_else, index=branch_if_end_instruction_pointer)# push offset to the end of true statement's end
 			
 			return else_line_num
+
+	def visitWhileStatement(self, while_statement):
+		top_label_instruction_pointer = self.getInstructionPointerSize() # this points to below expression
+		line_num = self.compile(while_statement.expression) # put the condition expression in the stack
+
+		self.emitCodes(OpCode.OP_JMP_IF_FALSE, None, at_line=line_num) #put random byte at the jump location
+		branch_if_start_instruction_pointer = self.getInstructionPointerSize() - 1 # this indexes the above Null byte 
+
+		#compile loop code 
+
+		loop_line_num = self.compile(while_statement.block_statement)
+		branch_if_end_instruction_pointer = self.getInstructionPointerSize() + 1 + 1 # this points to the following op_jmp, but we need to add one since loop ofset variable is also in the code stack and an additional 1 so that the ip_counter point next to it.
+
+		loop_offset = top_label_instruction_pointer - branch_if_end_instruction_pointer  # this is negative, as we need to go upward
+		self.emitCodes(OpCode.OP_JMP, loop_offset, at_line=loop_line_num) # this loops to the start o the top_level_counter
+		
+		false_condition_instruction_pointer = self.getInstructionPointerSize() - 1 #this points to the instruction after the above OP_JMP
+		false_offset = false_condition_instruction_pointer - branch_if_start_instruction_pointer
+		self.emitByteAt(byte=false_offset, index=branch_if_start_instruction_pointer)
+
+
+

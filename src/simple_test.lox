@@ -33,15 +33,30 @@
 
 
 
-var art = 1000;
-var right1 = 100;
-var right2 = 200;
-if art * 20 == right1 * right2 {
-	print "art * 20 == right1 * right2";
+# var art = 1000;
+# var right1 = 100;
+# var right2 = 200;
+# if art * 20 == right1 * right2 {
+# 	print "art * 20 == right1 * right2";
+# # };
 # };
-};
-if true {
-     if !false {} else {print false;};
-	print "greater than 2";
-};
+# if true {
+#      if !false {} else {print false;};
+# 	print "greater than 2";
+# };
 
+print "fibonacci calculator ";
+
+var x = 1;
+var x_1 = 1;
+
+var limit = 10;
+
+while limit != 0 {
+    print x;
+	temp = x + x_1;
+	x = x_1;
+	x_1 = temp;
+
+	limit -= 1;
+};

@@ -259,7 +259,7 @@ class Vm:
 
 
             else:
-                self.reportVMError(f"unknown op_code {current_op_code.name}")
+                self.reportVMError(f"unknown op_code at ip: {self.ip}, current_op_code: {current_op_code}")
         
         # print('computed ', [str(v) for v in self.stack])
 
