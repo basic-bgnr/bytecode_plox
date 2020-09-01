@@ -1,14 +1,10 @@
 {
-var a = 1;
+	{ 
+	  var a = 100; 
+	  {	
+	    a = 200;
 
-{
-	var a = a;
-	print a;
-
-	a = 23;
-	print a;
-};
-
-print a;
-
+	  }; 
+	  print a;
+	};
 };

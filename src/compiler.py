@@ -238,7 +238,7 @@ class Compiler:
 		lvalue_name = assignment_statement.lvalue.expr.literal #local variable name
 
 		scope_entity = ScopeEntity(name=lvalue_name, scope_depth=self.scope_depth)
-		self.scope_entities.append(scope_entity)
+		self.addScopeEntity(scope_entity)
 		#################################################################
 
 		return line_num
@@ -250,7 +250,7 @@ class Compiler:
 		 # the variable is local
 		if local_stack_index is not None: 
 			line_num = self.compile(reassignment_statement.rvalue)
-			# print('reassign')
+			# print('reassign ', local_stack_index)
 			self.chunk.pushOpCodes(OpCode.OP_SET_LOCAL, local_stack_index, at_line=line_num)
 		else:
 			return self.addGlobalReassignment(reassignment_statement)
@@ -261,9 +261,15 @@ class Compiler:
 		#the scope_entities needs to transversed in reverse order so as to simulate a stack
 		# note: this function can return [int, None], when it returns 0, the variable is self referencing or, it may be a reassignment statement
 		# when 0 is returned, it should be separately handled for assignment and reassignment case
+		
+		# reversed_scope_entities = reversed(self.scope_entities)
+		# stack_indexes = reversed(range(len(reversed_scope_entities)))
 
-		for scope_entity in self.scope_entities[-1::-1]:
+		for stack_index, scope_entity in reversed(list(enumerate(self.scope_entities))):
 			if scope_entity.name == var_name:
-				stack_index = scope_entity.scope_depth-1;
+				# print('ressolved ', var_name)
 				return stack_index
 		return None
+
+	def addScopeEntity(self, scope_entity):
+		self.scope_entities.append(scope_entity)
