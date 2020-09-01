@@ -27,8 +27,8 @@ class Lox:
             Lox.runDebugFile(sys.argv[1], Vm())
 
         else:
-            Lox.runPrompt(Vm())
-            # Lox.runDebugPrompt(Vm())
+            # Lox.runPrompt(Vm())
+            Lox.runDebugPrompt(Vm())
 
     @staticmethod
     def runFileInteractive(path, vm):

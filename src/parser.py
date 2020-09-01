@@ -459,7 +459,7 @@ class Parser:
     def unitaryExpr(self):
         if (self.peek().tipe in [TokenType.BANG, TokenType.MINUS, TokenType.PLUS]):
             operator = self.advance() # advance the operator
-            return UnaryExpression(operator, self.literalExpr())
+            return UnaryExpression(operator, self.unitaryExpr())
         
         return self.callerExpr()
 
