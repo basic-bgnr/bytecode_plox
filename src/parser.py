@@ -364,7 +364,7 @@ class Parser:
         if (self.peek().tipe in [TokenType.EQUAL, TokenType.MINUS_EQUAL, TokenType.PLUS_EQUAL, TokenType.STAR_EQUAL, TokenType.SLASH_EQUAL]): # this is reassignment statement
         #the or operator is there to check for obj.propery reassignment expression
             #if (lvalue.expr.tipe == TokenType.IDENTIFIER ): #check if the lvalue is assignable variable
-            operator = self.advance() # consume the sign
+            operator = self.advance() # consume the sign =, -=, +=, *=, /=
             rvalue = self.parseExpr()
             if (operator.tipe == TokenType.EQUAL):
                 return ReassignmentStatement(lvalue, rvalue)

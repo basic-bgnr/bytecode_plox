@@ -6,36 +6,44 @@ class Disassembler:
 
 
     def disassemble(self):
-        return_string = []
-        op_code_iterator = zip(iter(self.chunk.codes), iter(self.chunk.lines))
+        NotImplemented
 
-        try:
-            while ( val := next(op_code_iterator) ):
-                current_opcode, current_line = val
-                
-                if (current_opcode in [OpCode.OP_LOAD_CONSTANT, OpCode.OP_DEFINE_GLOBAL, OpCode.OP_LOAD_GLOBAL, OpCode.OP_REDEFINE_GLOBAL]):
-                    index, current_line = next(op_code_iterator) #consume the next value of the code that contains the index of the constant
-                    value = self.chunk.constantAt(index)
-                    return_string.append( self.toString(current_line, f"{current_opcode.name}", f"[{index}]" , f"{value}" ) )
+    def pretty_print(self):
+        output_string = []
+        line_code_pair = zip(self.chunk.lines, self.chunk.codes)
 
-                elif (current_opcode in [OpCode.OP_LOAD_LOCAL, OpCode.OP_SET_LOCAL]):
-                    index, current_line = next(op_code_iterator) #consume the next value of the code that contains the index of the constant
-                    value = '[...]'
-                    return_string.append( self.toString(current_line, f"{current_opcode.name}", f"[{index}]" , f"{value}" ) )
-                else:
-                    return_string.append( self.toString(current_line, f"{current_opcode.name}") )
+        op_codes_followed_by_bytes = [OpCode.OP_LOAD_CONSTANT, 
+                                     OpCode.OP_DEFINE_GLOBAL,
+                                     OpCode.OP_LOAD_GLOBAL,
+                                     OpCode.OP_REDEFINE_GLOBAL,
+                                     OpCode.OP_LOAD_LOCAL,
+                                     OpCode.OP_SET_LOCAL]
+                                      
+        op_codes_stack  = [OpCode.OP_LOAD_LOCAL,
+                           OpCode.OP_SET_LOCAL]
 
-        except StopIteration:
-            pass
+        op_codes_global = [OpCode.OP_LOAD_CONSTANT, 
+                             OpCode.OP_DEFINE_GLOBAL,
+                             OpCode.OP_LOAD_GLOBAL,
+                             OpCode.OP_REDEFINE_GLOBAL]
 
-        return "\n".join(return_string)
+        for line_number, op_code in line_code_pair:
 
+            if op_code in op_codes_followed_by_bytes:
+                _, next_byte = next(line_code_pair)
+                value = self.chunk.constantAt(index=next_byte) if op_code in op_codes_global else '[...]'
+                output_string.append(Disassembler.stringify(line_number , op_code, f"[{next_byte}]", value))
+            else:
+                output_string.append(Disassembler.stringify(line_number, op_code))
 
-    def toString(self, line_number, op_code, *options):
+        return '\n'.join(output_string)
+
+    @staticmethod
+    def stringify(line_number, op_code, *options):
         optional_string = ""
         for option in options:
-            optional_string += f" {option:>4} "
+            optional_string += f" {str(option):<10}"
 
-        return f"{line_number:>04} {op_code:<18}" + optional_string
+        return f"{line_number:>04} {op_code.name:<18}" + optional_string
 
         # return str(line_number) + op_code + optional_string

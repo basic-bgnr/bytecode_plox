@@ -1,10 +1,19 @@
+var outer = "outer";
 {
-	{ 
-	  var a = 100; 
-	  {	
-	    a = 200;
-
-	  }; 
-	  print a;
+	var inner = outer;
+	print inner;
+	{
+		outer ="inner";
+		print outer;
+		inner = outer;
 	};
+	print inner;
 };
+print outer;
+
+
+######################################################
+
+# var a = 10;
+# var a = a;
+

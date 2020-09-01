@@ -37,8 +37,14 @@ class Chunk:
 
     def makeConstant(self, constant):
         index = self._constant_map[constant]
-        if  index is not None: 
+
+        if  index is not None:
+            # print('found in previous')
+            # print(self.constants)
             return index
+        # print('found not in previous')
+        # print(f"{constant}")
+        # print(f"{[str(c) for c in self.constants]}")
         return self.addConstant(constant)
 
     #add the constant without any checks

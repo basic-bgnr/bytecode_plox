@@ -13,3 +13,13 @@ class MasterData:
 
 	def __str__(self):
 		return f"<{self.tipe.name} {self.value}>"
+
+	###############optimization for low memory count during compilation, if any error comment out the following########
+	def __hash__(self):
+		if self.tipe == LanguageTypes.STRING:
+			return hash(self.value)
+		else:
+			return hash((self.tipe, self.value))
+
+	def __eq__(self, other):
+		return self.value == other.value

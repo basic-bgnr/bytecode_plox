@@ -87,7 +87,9 @@ class Lox:
         #why this runs, its because of the lox interpreter environment, which remains in existence even after this function ends 
         scanner = Scanner(source_code)
         scanner.scanTokens()
-        # print(scanner.toString())
+        
+        print(scanner.toString())
+        
         parser = Parser(scanner.token_list)
         parser.parse()
 
@@ -99,7 +101,7 @@ class Lox:
 
         disassembler = Disassembler(compiler.chunk)
         print("#############################ByteCode###################################")
-        print(disassembler.disassemble())
+        print(disassembler.pretty_print())
         print("########################################################################")
 
         vm.run(compiler.chunk)
