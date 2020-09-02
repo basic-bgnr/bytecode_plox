@@ -226,6 +226,7 @@ class Vm:
                 # process producing no changes in the stack
                 return_value = self.popStack()
                 try:
+                    self.table[variable_name.value] # check if variable is defined in the table, catch exception if not
                     self.table[variable_name.value] = return_value
                 except KeyError:
                     self.reportError(f"variable `{variable_name.value}` needs to be declared before using")
