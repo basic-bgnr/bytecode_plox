@@ -92,7 +92,12 @@ class Scanner:
 			self.addToken(TokenType.BANG_EQUAL, '') if self.peekAndMatch(TokenType.EQUAL.value) else self.addToken(TokenType.BANG, '')
 
 		elif (lexeme == TokenType.EQUAL.value):
-			self.addToken(TokenType.EQUAL_EQUAL, '') if self.peekAndMatch(TokenType.EQUAL.value) else self.addToken(TokenType.EQUAL, '')
+			if self.peekAndMatch(TokenType.EQUAL.value):
+				self.addToken(TokenType.EQUAL_EQUAL, '')
+			if self.peekAndMatch(TokenType.GREATER.value):
+				self.addToken(TokenType.FAT_ARROW, '')
+			else:
+				self.addToken(TokenType.EQUAL, '')
 
 		elif (lexeme == TokenType.LESS.value):
 			self.addToken(TokenType.LESS_EQUAL, '') if self.peekAndMatch(TokenType.EQUAL.value) else self.addToken(TokenType.LESS, '')
@@ -166,7 +171,11 @@ class Scanner:
 																					TokenType.THIS,
 																					TokenType.TRUE,
 																					TokenType.VAR,
-																					TokenType.WHILE]})
+																					TokenType.WHILE,
+																					TokenType.MATCH,
+																					TokenType.CASE,
+																					TokenType.DEFAULT,
+																					]})
 
 			literal = self.getLiteral()
 			if reserved_keyword:= reserved_keywords[literal] : # this is unique system for python 3 
@@ -271,7 +280,9 @@ class TokenType(Enum):
   SLASH_EQUAL ='/='
 
   STAR = '*'  
-  STAR_EQUAL = '*='  
+  STAR_EQUAL = '*='
+
+  FAT_ARROW = '=>'
 
   ##Literals.                                     
   IDENTIFIER  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -295,5 +306,10 @@ class TokenType(Enum):
   TRUE = 'true'
   VAR = 'var'
   WHILE = 'while'
+  MATCH = 'match'
+  CASE = 'case'
+  DEFAULT = 'default'
+
+
 
   EOF = '\0'

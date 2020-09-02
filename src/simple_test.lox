@@ -99,4 +99,14 @@
 # 	};
 # };
 
-for ( var counter = 0; counter <= 100; counter+= 1) { print counter; };
+# for ( var counter = 0; counter <= 100; counter+= 1) { print counter; };
+
+
+var val = 1;
+
+match val {
+
+	case <10  =>  print "two"
+	case <10  =>  print "one"
+	
+};

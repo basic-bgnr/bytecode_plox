@@ -186,10 +186,15 @@ class Parser:
             #this is executed every loop so as to prevent indirection to other intermediate AST list 
             statement = self.parseStatement()
             # print('statement  -> ', statement)
+            
             if (statement is not None):
+                # print('append')
+                # print(f"{self.peek().tipe}")
                 AST.append(statement)
-            elif(self.peek().tipe == TokenType.SEMICOLON):
+
+            if(self.peek().tipe == TokenType.SEMICOLON):
                 self.advance()#consume the semicolon
+                # print('semicolon consumed')
             else:
                 raise Exception(f'statement is not terminated by semicolon at line {self.peek().line}')
         return AST 
@@ -210,6 +215,10 @@ class Parser:
 
         if (if_statement := self.ifStatement()):
             return if_statement
+        #match is syntactic sugar 
+        if (match_statement := self.matchStatement()):
+            # print('match_statement')
+            return match_statement
 
         if (print_statement := self.printStatement()):
             return print_statement
@@ -217,6 +226,7 @@ class Parser:
         if (while_statement := self.whileStatement()):
             return while_statement
 
+        #for is syntactic sugar
         if (for_statement := self.forStatement()):
             return for_statement
 
@@ -402,9 +412,120 @@ class Parser:
         else: #if there is no equlity sign then it must be expression statement 
             return ExpressionStatement(lvalue)
 
+    def matchStatement(self):
+        if (self.peek().tipe == TokenType.MATCH):
+
+            self.advance() #advance the match keyword
+
+            match_expr = self.parseExpr()
+
+            #the following expression is mandatory
+            if (match_expr is None):
+                raise Exception(f"match statement must be followed by valid expresion at line {self.peek().line}")
+
+            if (self.peek().tipe != TokenType.LEFT_BRACE):
+                raise Exception(f"match statemetn must start with {{{ {} }}} at line {self.peek().line}")
+            
+            self.advance() # advance the { 
+
+            #########################################################################################################
+            #first case statement
+            if (self.peek().tipe != TokenType.CASE):
+                raise Exception(f"match statement must contain matching case statement at line {self.peek().line}")
+                
+            self.advance() # advance the case keyword
+
+            ################################################################# operator before case 
+            if (self.peek().tipe in [TokenType.EQUAL_EQUAL, 
+                                     TokenType.BANG_EQUAL, 
+                                     TokenType.LESS, 
+                                     TokenType.LESS_EQUAL, 
+                                     TokenType.GREATER,
+                                     TokenType.GREATER_EQUAL]):
+                operator = self.advance()
+            else:#if not default is == 
+                operator = Token(tipe=TokenType.EQUAL_EQUAL, lexeme='==', literal='', line=self.peek().line)
+
+            #################################################################
+
+            case = self.parseExpr()
+            if (case is None):
+                raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
+
+            if (self.peek().tipe != TokenType.FAT_ARROW):
+                raise Exception(f"missing associated => in case statement at line {self.peek().line}")
+
+            self.advance() # advance the => token
+
+            if_block_statement = self.parseStatement()
+
+            if_statement = IfStatement(expression = BinaryExpression(left=match_expr, operator=operator, right=case),
+                                       if_block_statement = if_block_statement,
+                                       else_block_statement= None) # we currently don't have matching else block, we will fill it up later 
+
+            #add the reference of original if statement so that it can be returned, the above if_statement is continually mutated in the following
+            #loop to allow chained if_statement
+            return_if_statement = if_statement 
+
+
+            ########################################################################################################
+
+            ####################################################################################
+            #other case statement
+            while True:
+
+                if (self.peek().tipe == TokenType.RIGHT_BRACE):
+                    self.advance() #consume right brace
+                    break
+                
+
+                if (self.peek().tipe != TokenType.CASE):
+                    raise Exception(f"match statement must contain matching case statement at line {self.peek().line}")
+                
+                self.advance() # advance the case keyword
+                ################################################################# operator before case 
+                if (self.peek().tipe in [TokenType.EQUAL_EQUAL, 
+                                         TokenType.BANG_EQUAL, 
+                                         TokenType.LESS, 
+                                         TokenType.LESS_EQUAL, 
+                                         TokenType.GREATER,
+                                         TokenType.GREATER_EQUAL]):
+                    operator = self.advance()
+                else:#if not default is == 
+                    operator = Token(tipe=TokenType.EQUAL_EQUAL, lexeme='==', literal='', line=self.peek().line)
+
+            #################################################################
+
+
+                case = self.parseExpr()
+                if (case is None):
+                    raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
+
+                if (self.peek().tipe != TokenType.FAT_ARROW):
+                    raise Exception(f"missing associated => in case statement at line {self.peek().line}")
+
+                self.advance() # advance the => token
+
+                else_block_statement = self.parseStatement()
+
+
+                else_statement = IfStatement(expression = BinaryExpression(left=match_expr, operator=operator, right=case),
+                                           if_block_statement = else_block_statement,
+                                           else_block_statement= None) # we currently don't have matching else block, we will fill it up later 
+
+
+
+                if_statement.else_block_statement = else_statement
+
+                if_statement = else_statement 
+
+            ####################################################################################
+            return return_if_statement
+
+
     def ifStatement(self):
         if (self.peek().tipe == TokenType.IF):
-            self.advance() #consume the 'if' token
+            self.advance() #advance the 'if' token
             expression = self.parseExpr()
             if (if_block_statement := self.blockStatement()):
                 if (self.peek().tipe == TokenType.ELSE):
