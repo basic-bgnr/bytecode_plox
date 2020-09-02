@@ -79,22 +79,24 @@
 
 #print "fibonacci calculator using fibonacci"
 
-var x  = 1;
-var x_ = 1;
+# var x  = 1;
+# var x_ = 1;
 
-var limit = 1_1_1;
-var inc = 1;
+# var limit = 1_1_1;
+# var inc = 1;
 
-for(var counter = 1; counter <= limit; counter+= inc) {
-	print "---------------------";
-	print counter;
-	print x;
-	print "+++++++++++++++++++++";
-	temp = x + x_;
-	x = x_;
-	x_ = temp;
+# for(var counter = 1; counter <= limit; counter+= inc) {
+# 	print "---------------------";
+# 	print counter;
+# 	print x;
+# 	print "+++++++++++++++++++++";
+# 	temp = x + x_;
+# 	x = x_;
+# 	x_ = temp;
 
-	if counter > limit/2{
-		inc = 10;
-	};
-};
+# 	if counter > limit/2{
+# 		inc = 10;
+# 	};
+# };
+
+for ( var counter = 0; counter <= 100; counter+= 1) { print counter; };

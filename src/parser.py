@@ -186,9 +186,10 @@ class Parser:
             #this is executed every loop so as to prevent indirection to other intermediate AST list 
             statement = self.parseStatement()
             # print('statement  -> ', statement)
-            if (self.peek().tipe == TokenType.SEMICOLON and statement is not None):
-                self.advance()#consume the semicolon
+            if (statement is not None):
                 AST.append(statement)
+            elif(self.peek().tipe == TokenType.SEMICOLON):
+                self.advance()#consume the semicolon
             else:
                 raise Exception(f'statement is not terminated by semicolon at line {self.peek().line}')
         return AST 
