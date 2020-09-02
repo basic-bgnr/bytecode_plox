@@ -45,18 +45,56 @@
 # 	print "greater than 2";
 # };
 
-print "fibonacci calculator ";
+# print "fibonacci calculator ";
 
-var x = 1;
-var x_1 = 1;
+# var x = 1;
+# var x_1 = 1;
 
-var limit = 10;
+# var limit = 10;
 
-while limit != 0 {
-    print x;
-	temp = x + x_1;
-	x = x_1;
-	x_1 = temp;
+# while limit != 0 {
+#     print x;
+# 	temp = x + x_1;
+# 	x = x_1;
+# 	x_1 = temp;
 
-	limit -= 1;
+# 	limit -= 1;
+# };
+
+
+
+
+# var x  = 1;
+# var x_ = 1;
+
+# var limit = 1_1_1;
+
+# for(;;) {
+# 	print x;
+# 	temp = x + x_;
+# 	x = x_;
+# 	x_ = temp;
+# };
+
+
+#print "fibonacci calculator using fibonacci"
+
+var x  = 1;
+var x_ = 1;
+
+var limit = 1_1_1;
+var inc = 1;
+
+for(var counter = 1; counter <= limit; counter+= inc) {
+	print "---------------------";
+	print counter;
+	print x;
+	print "+++++++++++++++++++++";
+	temp = x + x_;
+	x = x_;
+	x_ = temp;
+
+	if counter > limit/2{
+		inc = 10;
+	};
 };

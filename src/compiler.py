@@ -26,8 +26,8 @@ class Compiler:
 			self.compile(AS)
 
 	def compile(self, AS):
-		if AS is not None:
-			return AS.linkVisitor(self)
+		# if AS is not None:
+		return AS.linkVisitor(self)
 
 	def makeConstant(self, constant):
 		return self.chunk.makeConstant(constant)
