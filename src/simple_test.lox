@@ -102,11 +102,40 @@
 # for ( var counter = 0; counter <= 100; counter+= 1) { print counter; };
 
 
-var val = 20;
+var val = 35;
 
 match val {
-
-	case < val+10 =>  print "two"
+	case >60      =>  print "greater than 60"
+	case >50      =>  print "greater than 50"
+	case >40      =>  print "greater than 40"
+	case >30      =>  print "greater than 30"
+	case >20      =>  print "greater than 20"
+	case >10      =>  print "greater than 10"
 	case default  =>  print "otherwise"
 	
+};
+
+
+if val > 10 {
+	print "greater than 10";
+};
+
+if val > 20 {
+	print "greater than 20";
+};
+
+if val > 30 {
+	print "greater than 30";
+};
+
+if val > 40 {
+	print "greater than 40";
+};
+
+if val > 50 {
+	print "greater than 50";
+};
+
+if val > 60 {
+	print "greater than 60";
 };

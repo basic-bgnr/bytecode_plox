@@ -429,8 +429,8 @@ class Parser:
             match_expr = self.parseExpr() 
 
             #the following expression is mandatory, however since the parseExpr() function now raises execption on none value, the following check might not be required
-            if (match_expr is None):
-                raise Exception(f"match statement must be followed by valid expresion at line {self.peek().line}")
+            # if (match_expr is None):
+            #     raise Exception(f"match statement must be followed by valid expresion at line {self.peek().line}")
 
             if (self.peek().tipe != TokenType.LEFT_BRACE):
                 raise Exception(f"match statemetn must start with {{{ {} }}} at line {self.peek().line}")
@@ -455,8 +455,8 @@ class Parser:
             case = self.parseExpr()
 
             ####this check might not be required
-            if (case is None):
-                raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
+            # if (case is None):
+            #     raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
 
             if (self.peek().tipe != TokenType.FAT_ARROW):
                 raise Exception(f"missing associated => in case statement at line {self.peek().line}")
@@ -510,8 +510,9 @@ class Parser:
                     case = self.parseExpr()
                     # print('case ', ASTPrinter().print(case), case.right)
 
-                    if (case is None):
-                       raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
+                    #this might not be required
+                    # if (case is None):
+                    #    raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
 
 
                 if (self.peek().tipe != TokenType.FAT_ARROW):
