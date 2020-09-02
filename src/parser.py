@@ -1,3 +1,4 @@
+from ASTPrinter import ASTPrinter
 class ClassStatement():
     def __init__(self, class_identifier_expression, function_statements, variable_statements):
         self.class_identifier_expression = class_identifier_expression
@@ -413,13 +414,21 @@ class Parser:
             return ExpressionStatement(lvalue)
 
     def matchStatement(self):
+        allowed_logical_operator_token = [TokenType.EQUAL_EQUAL, 
+                                         TokenType.BANG_EQUAL, 
+                                         TokenType.LESS, 
+                                         TokenType.LESS_EQUAL, 
+                                         TokenType.GREATER,
+                                         TokenType.GREATER_EQUAL]
+
+        
         if (self.peek().tipe == TokenType.MATCH):
 
             self.advance() #advance the match keyword
 
-            match_expr = self.parseExpr()
+            match_expr = self.parseExpr() 
 
-            #the following expression is mandatory
+            #the following expression is mandatory, however since the parseExpr() function now raises execption on none value, the following check might not be required
             if (match_expr is None):
                 raise Exception(f"match statement must be followed by valid expresion at line {self.peek().line}")
 
@@ -436,12 +445,7 @@ class Parser:
             self.advance() # advance the case keyword
 
             ################################################################# operator before case 
-            if (self.peek().tipe in [TokenType.EQUAL_EQUAL, 
-                                     TokenType.BANG_EQUAL, 
-                                     TokenType.LESS, 
-                                     TokenType.LESS_EQUAL, 
-                                     TokenType.GREATER,
-                                     TokenType.GREATER_EQUAL]):
+            if (self.peek().tipe in allowed_logical_operator_token):
                 operator = self.advance()
             else:#if not default is == 
                 operator = Token(tipe=TokenType.EQUAL_EQUAL, lexeme='==', literal='', line=self.peek().line)
@@ -449,6 +453,8 @@ class Parser:
             #################################################################
 
             case = self.parseExpr()
+
+            ####this check might not be required
             if (case is None):
                 raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
 
@@ -471,11 +477,12 @@ class Parser:
             ########################################################################################################
 
             ####################################################################################
-            #other case statement
+            #other case statements
+            is_default = False #notify when default statement is parsed
             while True:
 
                 if (self.peek().tipe == TokenType.RIGHT_BRACE):
-                    self.advance() #consume right brace
+                    self.advance() #consume right brace, end of statement
                     break
                 
 
@@ -483,23 +490,29 @@ class Parser:
                     raise Exception(f"match statement must contain matching case statement at line {self.peek().line}")
                 
                 self.advance() # advance the case keyword
-                ################################################################# operator before case 
-                if (self.peek().tipe in [TokenType.EQUAL_EQUAL, 
-                                         TokenType.BANG_EQUAL, 
-                                         TokenType.LESS, 
-                                         TokenType.LESS_EQUAL, 
-                                         TokenType.GREATER,
-                                         TokenType.GREATER_EQUAL]):
-                    operator = self.advance()
-                else:#if not default is == 
-                    operator = Token(tipe=TokenType.EQUAL_EQUAL, lexeme='==', literal='', line=self.peek().line)
 
-            #################################################################
+                #check for default keyword after case keyword
+                if (self.peek().tipe == TokenType.DEFAULT):
+                    if is_default: # if is_default == true, we have already parsed default case and two default is error
+                        raise Exception(f"Multiple default case found at line {self.peek().line}")
+                    else:
+                        self.advance() # consume default keyword
+                        is_default = True
+                else:
+                    #if default is not found check for logical comparison operator as ususal
+                    ################################################################# operator before expression
+                    if (self.peek().tipe in allowed_logical_operator_token):
+                        operator = self.advance()
+                    else:#if not default is == 
+                        operator = Token(tipe=TokenType.EQUAL_EQUAL, lexeme='==', literal='', line=self.peek().line)
 
+                    #################################################################
+                    case = self.parseExpr()
+                    # print('case ', ASTPrinter().print(case), case.right)
 
-                case = self.parseExpr()
-                if (case is None):
-                    raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
+                    if (case is None):
+                       raise Exception(f"case statement must be followed by valid expresion at line {self.peek().line}")
+
 
                 if (self.peek().tipe != TokenType.FAT_ARROW):
                     raise Exception(f"missing associated => in case statement at line {self.peek().line}")
@@ -508,16 +521,20 @@ class Parser:
 
                 else_block_statement = self.parseStatement()
 
+                #if default is parsed, it is immediately the final else statement
+                if is_default:
+                    if_statement.else_block_statement = else_block_statement
+                    
+                else:#for regualar statements
+                    else_statement = IfStatement(expression = BinaryExpression(left=match_expr, operator=operator, right=case),
+                                               if_block_statement = else_block_statement,
+                                               else_block_statement= None) # we currently don't have matching else block, we will fill it up later 
 
-                else_statement = IfStatement(expression = BinaryExpression(left=match_expr, operator=operator, right=case),
-                                           if_block_statement = else_block_statement,
-                                           else_block_statement= None) # we currently don't have matching else block, we will fill it up later 
 
 
+                    if_statement.else_block_statement = else_statement
 
-                if_statement.else_block_statement = else_statement
-
-                if_statement = else_statement 
+                    if_statement = else_statement 
 
             ####################################################################################
             return return_if_statement
@@ -710,6 +727,8 @@ class Parser:
                 return group_expr
             else:
                 raise Exception(f'error no matching parenthesis found at {self.peek().line}') #exception needs to be raised here
+
+        raise Exception(f"invalid expression found at {self.peek().line} ")
 
 
 
