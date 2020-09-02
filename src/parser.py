@@ -421,40 +421,50 @@ class Parser:
         #this whole is a syntactic sugar for whilestatement
         if(self.peek().tipe == TokenType.FOR):
             self.advance() # consume for keyword
-            if(self.peek().tipe == TokenType.LEFT_PAREN):
-                self.advance() # consume the `(`
-                initializer = self.parseStatement()
-                if (self.peek().tipe == TokenType.SEMICOLON):
-                    self.advance() # consume the semicolon
-                    condition = self.parseExpr()
-                    if condition is None:
-                        raise Exception(f"for statement needs to have compulsory condition check at line {self.peek().line}")
-                    if (self.peek().tipe == TokenType.SEMICOLON):
-                        self.advance() # consume the semicolon
-                        increment = self.parseStatement()
-                        if (self.peek().tipe == TokenType.RIGHT_PAREN):
-                            self.advance() # consume the right paren
+            
+            if(self.peek().tipe != TokenType.LEFT_PAREN):
+                raise Exception(f"for statement should be followed by parenthesis in at line {self.peek().line}")
 
-                            block_statement = self.blockStatement()
-                            if increment is not None:
-                                block_statement.statements.append(increment) # direct AST manipulation must be explicitly checked for None type
+            self.advance() # consume the `(`
+            
+            initializer = self.parseStatement()
+            if (self.peek().tipe != TokenType.SEMICOLON):
+                raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
+            self.advance() # consume the semicolon
+            
+            condition = self.parseExpr()
+            if condition is None:
+                raise Exception(f"for statement needs to have compulsory condition check at line {self.peek().line}")
 
+            if (self.peek().tipe != TokenType.SEMICOLON):
+                raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
+            self.advance() # consume the semicolon
+            
+            increment = self.parseStatement() # optional so doesn't raised exception
+            if (self.peek().tipe != TokenType.RIGHT_PAREN):
+                raise Exception(f"no matching parenthesis in for statement at line {self.peek().line}")
+            self.advance() # consume the right paren
 
-                            while_statement = WhileStatement(condition, block_statement)
+            block_statement = self.blockStatement()
+            if increment is not None:
+                block_statement.statements.append(increment) # direct AST manipulation must be explicitly checked for None type
 
-                            current_ast = self.getCurrentAST()
-                            if initializer is not None: # direct AST manipulation must be explicitly checked for None type
-                                current_ast.append(initializer)
+            while_statement = WhileStatement(condition, block_statement)
 
-                            return while_statement
-                        else:
-                            raise Exception(f"no matching parenthesis in for statement at line {self.peek().line}")
-                    else:
-                        raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
-                else:
-                    raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
+            
+            # add the initializer before the body of the while statement, at the top
+            if initializer is not None: # direct AST manipulation must be explicitly checked for None type
+                self.getCurrentAST().append(initializer) 
 
-            raise Exception(f"for statement should be followed by parenthesis in at line {self.peek().line}")
+            return while_statement
+#         else:
+#             raise Exception(f"no matching parenthesis in for statement at line {self.peek().line}")
+#     else:
+#         raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
+# else:
+#     raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
+
+#     raise Exception(f"for statement should be followed by parenthesis in at line {self.peek().line}")
 
 
 
