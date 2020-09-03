@@ -19,13 +19,19 @@ class Disassembler:
                                      OpCode.OP_LOAD_LOCAL,
                                      OpCode.OP_SET_LOCAL,
                                      OpCode.OP_JMP_IF_FALSE,
-                                     OpCode.OP_JMP]
+                                     OpCode.OP_JMP,
+                                     OpCode.OP_RET,
+                                     OpCode.OP_CALL,
+                                     OpCode.OP_PUSH]
                          
         ###############################################
         op_codes_stack  = [OpCode.OP_LOAD_LOCAL,
                            OpCode.OP_SET_LOCAL,
-                           OpCode.OP_JMP_IF_FALSE,
-                           OpCode.OP_JMP]
+                           # OpCode.OP_JMP_IF_FALSE,
+                           OpCode.OP_JMP,
+                           OpCode.OP_RET,
+                           OpCode.OP_CALL,
+                           OpCode.OP_PUSH]
 
         op_codes_global = [OpCode.OP_LOAD_CONSTANT, 
                              OpCode.OP_DEFINE_GLOBAL,
@@ -33,7 +39,7 @@ class Disassembler:
                              OpCode.OP_REDEFINE_GLOBAL]
 
         ###############################################
-        #list(map(lambda x: print(x), [str(c) for c in self.chunk.codes]))
+        # list(map(lambda x: print(x), [str(c) for c in self.chunk.codes]))
         for line_number, op_code in line_code_pair:
 
             if op_code in op_codes_followed_by_bytes:

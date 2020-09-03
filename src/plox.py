@@ -97,14 +97,16 @@ class Lox:
         print(ASTPrinter().printAll(parser.AST))
         print("########################################################################")
         compiler = Compiler()
-        compiler.compileAll(parser.AST)
+        entry_point = compiler.compileAll(parser.AST)
+
+        print('entry point ', entry_point)
 
         disassembler = Disassembler(compiler.chunk)
         print("#############################ByteCode###################################")
         print(disassembler.pretty_print())
         print("########################################################################")
 
-        vm.run(compiler.chunk)
+        vm.run(compiler.chunk, start_at = entry_point)
 
 
 #run the program by calling the static function main of the interpreter

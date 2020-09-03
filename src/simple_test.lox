@@ -102,40 +102,65 @@
 # for ( var counter = 0; counter <= 100; counter+= 1) { print counter; };
 
 
-var val = 35;
+# var val = 35;
 
-match val {
-	case >60      =>  print "greater than 60"
-	case >50      =>  print "greater than 50"
-	case >40      =>  print "greater than 40"
-	case >30      =>  print "greater than 30"
-	case >20      =>  print "greater than 20"
-	case >10      =>  print "greater than 10"
-	case default  =>  print "otherwise"
+# match val {
+# 	case >60      =>  print "greater than 60"
+# 	case >50      =>  print "greater than 50"
+# 	case >40      =>  print "greater than 40"
+# 	case >30      =>  print "greater than 30"
+# 	case >20      =>  print "greater than 20"
+# 	case >10      =>  print "greater than 10"
+# 	case default  =>  print "otherwise"
 	
-};
+# };
 
 
-if val > 10 {
-	print "greater than 10";
+# if val > 10 {
+# 	print "greater than 10";
+# };
+
+# if val > 20 {
+# 	print "greater than 20";
+# };
+
+# if val > 30 {
+# 	print "greater than 30";
+# };
+
+# if val > 40 {
+# 	print "greater than 40";
+# };
+
+# if val > 50 {
+# 	print "greater than 50";
+# };
+
+# if val > 60 {
+# 	print "greater than 60";
+# };
+
+# fun add(a, b) {
+# 	print "inside function add";
+# 	print a;
+# 	print b;
+
+
+# };
+
+# fun sub (a, b) {
+# 	# print "inside function sub";
+# 	# print a;
+# 	# print b;
+# };
+
+
+fun main() {
+	print "hello world !";
+
+	match 20 {
+	case 10 => print "not 10"
+	case 20 => print "exactly 20"
+	};
 };
 
-if val > 20 {
-	print "greater than 20";
-};
-
-if val > 30 {
-	print "greater than 30";
-};
-
-if val > 40 {
-	print "greater than 40";
-};
-
-if val > 50 {
-	print "greater than 50";
-};
-
-if val > 60 {
-	print "greater than 60";
-};

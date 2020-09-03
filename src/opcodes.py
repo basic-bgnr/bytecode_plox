@@ -24,7 +24,8 @@ class OpCode(Enum):
 
 	OP_PRINT = auto(),
 
-	OP_POP = auto()
+	OP_POP = auto(),
+	OP_PUSH = auto(),
 
 	OP_DEFINE_GLOBAL = auto(),
 	OP_LOAD_GLOBAL = auto(),
@@ -36,3 +37,7 @@ class OpCode(Enum):
 
 	OP_JMP_IF_FALSE = auto(),
 	OP_JMP = auto(),
+
+	OP_CALL = auto(),
+	OP_RET = auto(),
+	

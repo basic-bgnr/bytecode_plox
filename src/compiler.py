@@ -9,8 +9,7 @@ class ScopeEntity:
 	def __init__(self, name, scope_depth):
 		self.name = name #name is for resolving, finding variable by equating
 		self.scope_depth = scope_depth# scope depth is for popping the value when scope is ended
-		#p
-
+		
 
 class Compiler:
 	def __init__(self):
@@ -20,10 +19,30 @@ class Compiler:
 		self.scope_entities = []# position of ScopeEntity is the position of the variable in the stack, enumerate(scapepositoin) => (stack_index, scope_entitiy)
 		self.variable_in_scope = 0 #this is for calculating the number of times we need to pop, to remove the local variable from stack
 
+		self.function_table = {}
+
+	def addToFunctionTable(self, function_name, ip_index):
+		self.function_table[function_name] = ip_index
+
+	def getFunctionPointer(self, function_name):
+		try:
+			return self.function_table[function_name]
+		except KeyError:
+			raise Exception(f"{function_name} function is not defined")
+
+	def getNextIPLocation(self):#this is to modify the next byteelf):
+		return self.chunk.getNextIPLocation() #this is to modify the next byte
 
 	def compileAll(self, AST):
 		for AS in AST:
 			self.compile(AS)
+			# if self.compile(AS) is None:
+			# 	raise Expception("none occured ", AS)
+
+		try:
+			return self.getFunctionPointer(function_name='main')
+		except:
+			raise Exception("program must have function named 'main' as the only entry point")
 
 	def compile(self, AS):
 		# if AS is not None:
@@ -33,6 +52,7 @@ class Compiler:
 		return self.chunk.makeConstant(constant)
 
 	def emitCode(self, op_code, at_line):
+		print('emit code ', op_code)
 		self.chunk.pushOpCode(op_code, at_line)
 
 	def emitByte(self, byte, at_line):
@@ -44,8 +64,10 @@ class Compiler:
 	def emitCodes(self, op_code1, op_code2, at_line):
 		self.chunk.pushOpCodes(op_code1, op_code2, at_line)
 
+
+
 	def pushConstant(self, constant, at_line):
-		self.chunk.pushConstant(constant, at_line)
+		return self.chunk.pushConstant(constant, at_line)
 
 	def visitLiteralExpression(self, literal_expression):
 
@@ -170,7 +192,7 @@ class Compiler:
 		if expression_statement.expr:
 			#to do: use line_num
 			line_num = self.compile(expression_statement.expr)
-			self.emitCode(OpCode.OP_POP, at_line=line_num)
+			self.emitCode(OpCode.OP_POP, at_line=line_num) # extra pop due to function expression statement is due to this.
 			return line_num
 
 	def visitPrintStatement(self, print_statement):
@@ -192,11 +214,13 @@ class Compiler:
 	def beginScope(self):
 		self.scope_depth += 1
 		
-	def endScope(self, line_num):
+	def endScope(self, line_num, is_function=False):
 		self.scope_depth -= 1
 		# this is for calculating the number of times we need to pop, to remove the local variable from stack
 		while len(self.scope_entities)!=0 and self.scope_entities[-1].scope_depth > self.scope_depth:
-			self.emitCode(OpCode.OP_POP, at_line=line_num)
+			if not is_function: # op_code for poping in a function is deferred to caller so avoided here
+				print('end scope opp')
+				self.emitCode(OpCode.OP_POP, at_line=line_num)
 			self.scope_entities.pop()
 
 			
@@ -290,6 +314,71 @@ class Compiler:
 				# print('ressolved ', var_name)
 				return stack_index
 		return None
+
+	def visitFunctionStatement(self, function_statement):
+		# print('in function statemetn')
+		
+		ip = self.getNextIPLocation()
+		self.addToFunctionTable(function_name=function_statement.function_identifier_expression.expr.literal, ip_index=ip)
+
+
+		self.beginScope()
+		for param in function_statement.params_list:
+			self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=1))
+
+		####two dummy value to simulate caller convention#######
+		self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=1))
+		self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=1))
+		#######################################################
+
+		line_num = self.compile(function_statement.block_statement)
+		print('---------------------------now here')
+
+		self.emitCode(OpCode.OP_RET, at_line=line_num)
+		self.emitByte(self.resolveLocalVariable("@retptr"), at_line=line_num)
+
+		self.endScope(line_num, is_function=True)
+		
+
+		return line_num
+
+	def visitCallableExpression(self, function_expression):
+		# print('incallable')
+		
+		for arg in function_expression.args:
+			line_num = self.compile(arg) # push the args in the stack
+		else:#if no arg is supplied
+			line_num = function_expression.caller_expr.expr.line
+
+		#return pointer address, make the pointer address constant and load it using OP_CONSTANT
+		
+		self.emitCode(OpCode.OP_LOAD_CONSTANT, at_line=line_num)
+		index_to_modify_ret_ptr = self.getNextIPLocation() #this is to modify the next byte
+		self.emitByte(byte=None, at_line=line_num) # we fill it with none, because now we don't know where the return pointer should point to
+
+		
+		self.emitCode(OpCode.OP_CALL, at_line=line_num)
+		function_name = function_expression.caller_expr.expr.literal
+		#byte can also be made cosntant, OP_CONSTANT
+		self.emitByte(byte=self.getFunctionPointer(function_name), at_line=line_num)
+
+
+		ret_pointer_index = self.makeConstant(constant=MasterData(tipe=LanguageTypes.NUMBER, value=self.getNextIPLocation()))#this is to modify the next byte), at_line=line_num)
+		# print('ret_pointer_index ', ret_pointer_index)
+		self.emitByteAt(byte=ret_pointer_index, index=index_to_modify_ret_ptr)# this set the value of the byte previously set o None, as we now know where the function is going to end
+
+	
+
+		self.emitCode(OpCode.OP_POP, at_line=line_num) #pop the ret_ptr
+		print("-------------")
+		for arg in function_expression.args:#pop all argument 
+			print('arg')
+			self.emitCode(OpCode.OP_POP, at_line=line_num)
+		print("============")
+		breakpoint()
+		return line_num
+
+
 
 	def addScopeEntity(self, scope_entity):
 		self.scope_entities.append(scope_entity)

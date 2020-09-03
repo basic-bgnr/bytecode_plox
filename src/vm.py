@@ -7,6 +7,9 @@ class Vm:
         self.stack = [] # constainer for MasterData
         self.ip = 0
 
+        self.esp = 0
+        self.ebp = 0
+
         self.table = {} #storing reference to
 
     def reportVMError(self, message):
@@ -31,15 +34,15 @@ class Vm:
             return
         self.reportError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
-    def run(self, chunk=None):
+    def run(self, chunk=None, start_at=0):
         if chunk is not None:
             self.chunk = chunk
-            self.ip = 0
+            self.ip = start_at
 
         while current_op_code := self.getOpCode():
 
             if (current_op_code == OpCode.OP_RETURN):
-                return self.stack.pop()
+                return self.popStack()
 
             elif (current_op_code == OpCode.OP_LOAD_CONSTANT):
                 self.pushStack(self.loadConstant())
@@ -192,6 +195,11 @@ class Vm:
             elif (current_op_code == OpCode.OP_POP):
                 self.popStack()
 
+            elif (current_op_code == OpCode.OP_PUSH):
+                byte = self.getByte()
+                data = MasterData(tipe=LanguageTypes.NUMBER, value=byte)
+                self.pushStack(value=data)
+
 
 
             elif (current_op_code == OpCode.OP_PRINT):
@@ -206,18 +214,16 @@ class Vm:
                 # when variable = expr is defined, expr pushes one value in the stack, 
                 # assignment statement pops the value from the stack making the whole 
                 # process producing no changes in the stack
-                return_value = self.popStack()  
-                self.table[variable_name.value] = return_value
+                return_value = self.popStack()
+                self.setIntoTable(key=variable_name.value, value=return_value, check_if_exists=False)
+                # self.table[variable_name.value] = return_value
 
                 # print('op_code define ', self.table)
 
             elif (current_op_code == OpCode.OP_LOAD_GLOBAL):
                 variable_name = self.loadConstant()
-                try:
-                    ret_value = self.table[variable_name.value]
-                    self.pushStack(ret_value) #the net effect is that op_load_global pushes one value in the stack
-                except KeyError as e:
-                    self.reportError(f"variable `{variable_name.value}` is not defined")
+                ret_value = self.getFromTable(key=variable_name.value)
+                self.pushStack(ret_value) #the net effect is that op_load_global pushes one value in the stack
 
             elif (current_op_code == OpCode.OP_REDEFINE_GLOBAL):
                 variable_name = self.loadConstant()
@@ -225,24 +231,21 @@ class Vm:
                 # assignment statement pops the value from the stack making the whole 
                 # process producing no changes in the stack
                 return_value = self.popStack()
-                try:
-                    self.table[variable_name.value] # check if variable is defined in the table, catch exception if not
-                    self.table[variable_name.value] = return_value
-                except KeyError:
-                    self.reportError(f"variable `{variable_name.value}` needs to be declared before using")
+
+                self.setIntoTable(key=variable_name.value, value=return_value)
 
                 # print('op_code define ', self.table)
             elif (current_op_code == OpCode.OP_LOAD_LOCAL):
-                stack_entry_index = self.getByte()
+                stack_entry_index = self.getByte() + self.getEBP()
                 # when variable = expr is defined, expr pushes one value in the stack, 
                 # assignment statement pops the value from the stack making the whole 
                 # process producing no changes in the stack
-                value = self.stack[stack_entry_index]
+                value = self.peekStack(stack_entry_index)
 
                 self.pushStack(value)
 
             elif (current_op_code == OpCode.OP_SET_LOCAL):
-                stack_entry_index = self.getByte()
+                stack_entry_index = self.getByte() + self.getEBP()
                 self.stack[stack_entry_index] = self.popStack()
 
             elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
@@ -258,11 +261,55 @@ class Vm:
                 offset = self.getByte() # get the else condition instruction pointer
                 self.offsetIP(offset)
 
+            elif (current_op_code == OpCode.OP_CALL):
+                #### modify stack to include ebp ############
+                EBP = MasterData(tipe=LanguageTypes.NUMBER, value=self.getEBP())
+                self.pushStack(EBP)
+                self.setEBP(self.getESP()) # set new value to ebp
+                
+                #############################################
+
+                function_ip_index = self.getByte() # this returns the index of the function pointer that the ip should point to
+                
+                # actual_ip = self.table[function_ip_index]
+
+                self.setIP(ip=function_ip_index)
+
+            elif (current_op_code == OpCode.OP_RET):
+                
+                stack_index = self.getByte()
+                return_pointer = self.peekStack(index=stack_index)
+                print(' return pointer value : ', return_pointer.value)
+
+                self.setIP(return_pointer.value) #jump to the caller environment 
+
+                #on ret we pop all the value of the stack until ebp is equal to esp
+                while self.getEBP() != self.getESP():
+                    print(self.getEBP(), '-----esp ', self.getESP())
+                    self.popStack()
+
+                EBP = self.popStack()
+
+                self.setEBP(ebp=EBP.value) # restore previous value to ebp
 
             else:
                 self.reportVMError(f"unknown op_code at ip: {self.ip}, current_op_code: {current_op_code}")
         
         # print('computed ', [str(v) for v in self.stack])
+
+    def setEBP(self, ebp):
+        self.ebp = ebp
+
+    def getEBP(self):
+        return self.ebp 
+
+    def advanceESP(self):
+        self.esp += 1
+    def reverseESP(self):
+        self.esp -= 1
+
+    def getESP(self):
+        return self.esp
 
     def getOpCode(self):
         if (not self.isAtEnd()):
@@ -270,6 +317,9 @@ class Vm:
             self.advance()
             return ret_value
         return None
+
+    def setIP(self, ip):
+        self.ip = ip
 
     def offsetIP(self, offset):
         self.ip += offset
@@ -289,13 +339,30 @@ class Vm:
         return self.chunk.constantAt(index)
 
     def popStack(self):
-        # print(self.ip, ' popping ', f"{self.stack}")
+        print(self.ip, ' popping ', f"{[str(s) for s in self.stack[:-1]]}")
+        self.reverseESP()
         return self.stack.pop()
 
     def pushStack(self, value):
-        
+        self.advanceESP()
         self.stack.append(value)
-        # print(self.ip, ' pushing ', self.stack)
+        print(self.ip, ' pushing ', f"{[str(s) for s in self.stack]}")
+
+    def peekStack(self, index):
+        return self.stack[index]
 
     def getCurrentInstructionLine(self):
         return self.chunk.lineAt(self.ip-1) #ip is already advance before the instruction is run 
+
+    def getFromTable(self, key):
+        try:
+            return self.table[key]
+        except KeyError as e:
+                    self.reportError(f"variable `{variable_name.value}` is not defined")
+        
+
+    def setIntoTable(self, key, value, check_if_exists=True):
+        if check_if_exists:
+            self.table[key]
+
+        self.table[key] = value

@@ -85,6 +85,9 @@ class Chunk:
         # self.pushOpCodes(OpCode.OP_CONSTANT, index, at_line)      
         # return index
 
+    def getNextIPLocation(self):
+        return len(self.codes)
+
 def test():
     
     from disassembler import Disassembler
