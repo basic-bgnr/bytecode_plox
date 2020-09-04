@@ -21,7 +21,7 @@ class Vm:
     def assertTypeEquality(self, op1, op2):
         if (op1.tipe == op2.tipe):
             return
-        #op1.tipe.name, here .name can be called on `Enum` types to print their actual name
+        # op1.tipe.name, here .name can be called on `Enum` types to print their actual name
         self.reportError(f"type mismatch between the following:\n1. {op1}\n2. {op2}\nExpecting type: {op1.tipe.name}\nFound type: {op2.tipe.name}")
 
     def assertType(self, op1, tipe):
@@ -35,16 +35,18 @@ class Vm:
         self.reportError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
     def run(self, chunk=None, start_at=0):
+       
         if chunk is not None:
             self.chunk = chunk
             self.ip = start_at
 
         while current_op_code := self.getOpCode():
+            # breakpoint()
 
-            if (current_op_code == OpCode.OP_RETURN):
-                return self.popStack()
+            # if (current_op_code == OpCode.OP_RETURN):
+            #     return self.popStack()
 
-            elif (current_op_code == OpCode.OP_LOAD_CONSTANT):
+            if (current_op_code == OpCode.OP_LOAD_CONSTANT):
                 self.pushStack(self.loadConstant())
 
             elif (current_op_code == OpCode.OP_ADD):
@@ -232,11 +234,14 @@ class Vm:
                 # process producing no changes in the stack
                 return_value = self.popStack()
 
-                self.setIntoTable(key=variable_name.value, value=return_value)
+                self.setIntoTable(key=variable_name.value, value=return_value, check_if_exists=True)
 
                 # print('op_code define ', self.table)
             elif (current_op_code == OpCode.OP_LOAD_LOCAL):
-                stack_entry_index = self.getByte() + self.getEBP()
+                # breakpoint()
+                stack_entry_index = self.getStackEntryIndex()
+
+
                 # when variable = expr is defined, expr pushes one value in the stack, 
                 # assignment statement pops the value from the stack making the whole 
                 # process producing no changes in the stack
@@ -245,7 +250,7 @@ class Vm:
                 self.pushStack(value)
 
             elif (current_op_code == OpCode.OP_SET_LOCAL):
-                stack_entry_index = self.getByte() + self.getEBP()
+                stack_entry_index = self.getStackEntryIndex()
                 self.stack[stack_entry_index] = self.popStack()
 
             elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
@@ -263,6 +268,7 @@ class Vm:
 
             elif (current_op_code == OpCode.OP_CALL):
                 #### modify stack to include ebp ############
+               
                 EBP = MasterData(tipe=LanguageTypes.NUMBER, value=self.getEBP())
                 self.pushStack(EBP)
                 self.setEBP(self.getESP()) # set new value to ebp
@@ -276,26 +282,44 @@ class Vm:
                 self.setIP(ip=function_ip_index)
 
             elif (current_op_code == OpCode.OP_RET):
-                
                 stack_index = self.getByte()
                 return_pointer = self.peekStack(index=stack_index)
-                print(' return pointer value : ', return_pointer.value)
+                # print(' return pointer value : ', return_pointer.value)
 
-                self.setIP(return_pointer.value) #jump to the caller environment 
+                #here we need to int the returned value since it's being converted from internal NUMBER type which is floating point
+                self.setIP(int(return_pointer.value)) #jump to the caller environment 
 
                 #on ret we pop all the value of the stack until ebp is equal to esp
                 while self.getEBP() != self.getESP():
-                    print(self.getEBP(), '-----esp ', self.getESP())
+                    # print(self.getEBP(), '-----esp ', self.getESP())
                     self.popStack()
 
                 EBP = self.popStack()
 
                 self.setEBP(ebp=EBP.value) # restore previous value to ebp
 
+                self.pushStack(EBP) # push the same value in the stack, it is done because the function must change the stack as it's evaluated as expression
+
             else:
                 self.reportVMError(f"unknown op_code at ip: {self.ip}, current_op_code: {current_op_code}")
         
         # print('computed ', [str(v) for v in self.stack])
+
+    # calculate the location of stack variable when function frame is entered
+    def getStackEntryIndex(self):
+        # breakpoint()
+        #abs is done so that, -ve value is not produced when entering block statement, when epb is 0
+        # print('ip ', self.ip)
+        # print('stack entry value in byte ', self.getByte(), '  ', self.getEBP(), ' -> ',type(self.getByte()), type(self.getEBP()),", ", ' ip-> ', self.ip)
+        ebp = self.getEBP()
+        relative_stack_index = self.getByte()
+        # print('stack entry value in byte ', relative_stack_index, '  ', ebp, ' -> ',type(relative_stack_index), type(ebp),", ", ' ip-> ', self.ip)
+        if relative_stack_index > 0: # temp varaible in block are calculated in 
+            return relative_stack_index
+
+        absolute_stack_index = ebp + relative_stack_index -1 #function args are negative
+        # print('stack entry index ',absolute_stack_index)
+        return absolute_stack_index
 
     def setEBP(self, ebp):
         self.ebp = ebp
@@ -312,6 +336,7 @@ class Vm:
         return self.esp
 
     def getOpCode(self):
+
         if (not self.isAtEnd()):
             ret_value = self.chunk.codeAt(self.ip)
             self.advance()
@@ -339,16 +364,19 @@ class Vm:
         return self.chunk.constantAt(index)
 
     def popStack(self):
-        print(self.ip, ' popping ', f"{[str(s) for s in self.stack[:-1]]}")
+        # print(self.ip, ' popping ', f"{[str(s) for s in self.stack[:-1]]}")
         self.reverseESP()
         return self.stack.pop()
 
     def pushStack(self, value):
         self.advanceESP()
         self.stack.append(value)
-        print(self.ip, ' pushing ', f"{[str(s) for s in self.stack]}")
+        # print(self.ip, ' pushing ', f"{[str(s) for s in self.stack]}")
 
     def peekStack(self, index):
+        # breakpoint()
+        if index < 0: #relative indexing for function 
+            return self.stack[self.getEBP()+index-1]
         return self.stack[index]
 
     def getCurrentInstructionLine(self):
@@ -358,11 +386,11 @@ class Vm:
         try:
             return self.table[key]
         except KeyError as e:
-                    self.reportError(f"variable `{variable_name.value}` is not defined")
+                    self.reportError(f"variable `{key}` is not defined")
         
 
     def setIntoTable(self, key, value, check_if_exists=True):
         if check_if_exists:
-            self.table[key]
+            self.getFromTable(key)
 
         self.table[key] = value

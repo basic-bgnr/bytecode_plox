@@ -94,7 +94,7 @@ class Scanner:
 		elif (lexeme == TokenType.EQUAL.value):
 			if self.peekAndMatch(TokenType.EQUAL.value):
 				self.addToken(TokenType.EQUAL_EQUAL, '')
-			if self.peekAndMatch(TokenType.GREATER.value):
+			elif self.peekAndMatch(TokenType.GREATER.value):
 				self.addToken(TokenType.FAT_ARROW, '')
 			else:
 				self.addToken(TokenType.EQUAL, '')

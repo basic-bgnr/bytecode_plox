@@ -4,11 +4,19 @@ from lexer import TokenType
 from values import LanguageTypes, MasterData
 import LanguageConstants
 
+from itertools import count
+
 #helper class to manage local variable in program stack
 class ScopeEntity:
-	def __init__(self, name, scope_depth):
+	def __init__(self, name, scope_depth, index = None):
 		self.name = name #name is for resolving, finding variable by equating
 		self.scope_depth = scope_depth# scope depth is for popping the value when scope is ended
+
+		self.index = index #
+
+	def __str__(self):
+		return f"<ScopeEntity : name: {self.name:}, scope_depth: {self.scope_depth}, scope_index: {self.index}>"
+
 		
 
 class Compiler:
@@ -20,6 +28,9 @@ class Compiler:
 		self.variable_in_scope = 0 #this is for calculating the number of times we need to pop, to remove the local variable from stack
 
 		self.function_table = {}
+		
+		self.caller_ip = None
+
 
 	def addToFunctionTable(self, function_name, ip_index):
 		self.function_table[function_name] = ip_index
@@ -39,10 +50,11 @@ class Compiler:
 			# if self.compile(AS) is None:
 			# 	raise Expception("none occured ", AS)
 
-		try:
-			return self.getFunctionPointer(function_name='main')
-		except:
-			raise Exception("program must have function named 'main' as the only entry point")
+		# try:
+		# 	return self.getFunctionPointer(function_name='main')
+		# except:
+		# 	raise Exception("program must have function named 'main' as the only entry point")
+		return self.caller_ip
 
 	def compile(self, AS):
 		# if AS is not None:
@@ -52,7 +64,7 @@ class Compiler:
 		return self.chunk.makeConstant(constant)
 
 	def emitCode(self, op_code, at_line):
-		print('emit code ', op_code)
+		# print('emit code ', op_code)
 		self.chunk.pushOpCode(op_code, at_line)
 
 	def emitByte(self, byte, at_line):
@@ -207,7 +219,11 @@ class Compiler:
 		line_num = 0
 		for statement in block_statement.statements:
 			line_num = self.compile(statement)
+
+		# breakpoint()
 		self.endScope(line_num)
+
+		
 		return line_num
 
 
@@ -309,10 +325,16 @@ class Compiler:
 		# reversed_scope_entities = reversed(self.scope_entities)
 		# stack_indexes = reversed(range(len(reversed_scope_entities)))
 
-		for stack_index, scope_entity in reversed(list(enumerate(self.scope_entities))):
+		# for stack_index, scope_entity in reversed(list(enumerate(self.scope_entities))):
+		# 	if scope_entity.name == var_name:
+		# 		# print('ressolved ', var_name)
+		# 		return stack_index
+		# return None
+		for scope_entity in reversed(self.scope_entities):
 			if scope_entity.name == var_name:
 				# print('ressolved ', var_name)
-				return stack_index
+				# breakpoint()
+				return scope_entity.index
 		return None
 
 	def visitFunctionStatement(self, function_statement):
@@ -323,27 +345,49 @@ class Compiler:
 
 
 		self.beginScope()
-		for param in function_statement.params_list:
-			self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=1))
 
+		# add the value in the stack in reverse order, this is done so because resolveVariable functoion reversee the varaible is order to  simulate stack
 		####two dummy value to simulate caller convention#######
-		self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=1))
-		self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=1))
+
+		self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=1, index = 0) , default=False)
+		self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=1, index = -1), default=False)
+		
+		#######################################################
+
+		indices = count(start=-2, step=-1)
+
+		for index, param in zip(indices, reversed(function_statement.params_list)):
+			self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=1, index=index), default=False)
+
+		
+		# breakpoint()
+		
+
+
+		# for param in function_statement.params_list:
+		# 	self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=1))
+
+		# self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=1))
+		# self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=1))
 		#######################################################
 
 		line_num = self.compile(function_statement.block_statement)
-		print('---------------------------now here')
+		# print('---------------------------now here')
 
 		self.emitCode(OpCode.OP_RET, at_line=line_num)
 		self.emitByte(self.resolveLocalVariable("@retptr"), at_line=line_num)
 
 		self.endScope(line_num, is_function=True)
-		
+
+		# breakpoint()
+		# self.scope_entities.pop()#remove retptr and ebp
+		# self.scope_entities.pop()
 
 		return line_num
 
 	def visitCallableExpression(self, function_expression):
 		# print('incallable')
+		self.caller_ip = self.getNextIPLocation()
 		
 		for arg in function_expression.args:
 			line_num = self.compile(arg) # push the args in the stack
@@ -370,18 +414,21 @@ class Compiler:
 	
 
 		self.emitCode(OpCode.OP_POP, at_line=line_num) #pop the ret_ptr
-		print("-------------")
+		# print("-------------")
 		for arg in function_expression.args:#pop all argument 
 			print('arg')
 			self.emitCode(OpCode.OP_POP, at_line=line_num)
-		print("============")
-		breakpoint()
+		# print("============")
+		# breakpoint()
 		return line_num
 
 
 
-	def addScopeEntity(self, scope_entity):
+	def addScopeEntity(self, scope_entity, default=True):
+		if default:
+			scope_entity.index = len(self.scope_entities)
 		self.scope_entities.append(scope_entity)
+		print([str(s) for s in self.scope_entities])
 
 	def getInstructionPointerSize(self):
 		return self.chunk.getCodesLength()

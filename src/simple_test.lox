@@ -149,18 +149,78 @@
 # };
 
 # fun sub (a, b) {
-# 	# print "inside function sub";
-# 	# print a;
-# 	# print b;
+# 	print "inside function sub";
+# 	{
+# 	var a = 1000;
+# 	print a;
+# 	print b;
+# 	};
 # };
 
 
-fun main() {
-	print "hello world !";
+# fun main() {
 
-	match 20 {
-	case 10 => print "not 10"
-	case 20 => print "exactly 20"
+# 	# match 20 {
+# 	# case 10 => print "not 10"
+# 	# case 20 => print "exactly 20"
+# 	# };
+
+# 	# sub(10, 20);
+
+
+# 	# # {
+# 	# 	print "hello world !";
+
+# 	# 	var a = 100;
+		
+
+# 	# 	print a;
+# 	# };
+
+
+# };
+
+
+# main();
+fun sub (a, b) {
+	print "inside function sub";
+	{ {
+		a = 1000;
+		print a;
+		print b;};
 	};
 };
 
+fun main(){
+
+	{
+	var limit = 200;
+	print limit ;
+	};
+
+	var limit = 110;
+
+	if limit != 110 {
+		print "limit is 10";
+	}else{
+		print "limit is otherwise";
+	};
+
+	var a = 555;
+	print a;
+
+	sub(a,a);
+
+	print a;
+	
+	match limit {
+	case >200 => print "> 200"
+	case >100 => print "> 100"
+	};
+
+
+	sub(100, 120323);
+	
+};
+
+main();

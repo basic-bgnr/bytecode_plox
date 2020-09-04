@@ -673,26 +673,40 @@ class Parser:
         #################################
         def argument_list():
             args = []
-            if (arg:= self.parseExpr()):
-                args.append(arg)
+            # if (arg:= self.parseExpr()):
+            #     args.append(arg)
+            try:
+                expr = self.parseExpr()
+                args.append(expr)
+            except:
+                pass 
+
             while(self.peek().tipe != TokenType.RIGHT_PAREN):
+                # breakpoint()
                 if (self.peek().tipe == TokenType.EOF):
                     raise Exception(f"no matching parenthesis at line {left_paren.line}")
-                if (self.peek().tipe == TokenType.COMMA):
+                elif (self.peek().tipe == TokenType.COMMA):
+                    print('comman')
                     self.advance()#consume the comma
                     arg = self.parseExpr()
                     args.append(arg)
+                else:
+                    raise Exception(f"non valid syntax at {self.peek().line}")
+
             self.advance() # consume the right parenthesis
             return args
         ##################################
         caller_expr = self.literalExpr()
         while (True): 
+            print("true")
             if (self.peek().tipe == TokenType.LEFT_PAREN):
+                print('paren')
                 left_paren = self.advance()
                 args = argument_list()
                 caller_expr = FunctionExpression(caller_expr, args)
             #new code for dot operator
             elif(self.peek().tipe == TokenType.DOT):
+                print('dot')
                 dot = self.advance()
                 token_prop_or_method = self.advance()
                 caller_expr = GetExpression(caller_expr, prop_or_method=token_prop_or_method)
@@ -714,6 +728,7 @@ class Parser:
         # print('inside_literal_expr')
         if (anon_function  := self.anonFunctionExpr()):
             return anon_function
+       
         if (self.peek().tipe in [TokenType.STRING, TokenType.NUMBER, TokenType.IDENTIFIER, TokenType.TRUE, TokenType.FALSE, TokenType.THIS, TokenType.NIL]):
             # print('inside_literal_expr string number ... cont')
             literal_expr = self.advance()
@@ -728,6 +743,8 @@ class Parser:
                 return group_expr
             else:
                 raise Exception(f'error no matching parenthesis found at {self.peek().line}') #exception needs to be raised here
+
+        # breakpoint()
 
         raise Exception(f"invalid expression found at {self.peek().line} ")
 
