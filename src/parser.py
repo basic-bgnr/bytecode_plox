@@ -342,8 +342,12 @@ class Parser:
     def returnStatement(self):
         if (self.peek().tipe == TokenType.RETURN):
             return_keyword = self.advance()
-            if (ret_expr := self.parseExpr()):
+            try:
+                ret_expr = self.parseExpr()
                 return ReturnStatement(ret_expr)
+            except:
+                return ReturnStatement(expr=None)
+                
 
     def blockStatement(self):
         #anon function requiremnt, whenever you enter a block get a reference to parent AST and at the end 

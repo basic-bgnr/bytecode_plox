@@ -54,7 +54,9 @@ class Compiler:
 		# 	return self.getFunctionPointer(function_name='main')
 		# except:
 		# 	raise Exception("program must have function named 'main' as the only entry point")
+		# breakpoint()
 		return self.caller_ip
+
 
 	def compile(self, AS):
 		# if AS is not None:
@@ -337,6 +339,18 @@ class Compiler:
 				return scope_entity.index
 		return None
 
+	def visitReturnStatement(self, return_statement):
+		if return_statement.expr is not None:
+			line_num = self.compile(return_statement.expr)
+			self.emitCode(op_code=OpCode.OP_SET_EBX, at_line=line_num)
+
+		else:
+			line_num = 100; # empty return statement won't produce any error, so putting random value
+		
+		self.emitCode(op_code=OpCode.OP_RET, at_line=line_num)
+		return line_num
+
+
 	def visitFunctionStatement(self, function_statement):
 		# print('in function statemetn')
 		
@@ -374,8 +388,8 @@ class Compiler:
 		line_num = self.compile(function_statement.block_statement)
 		# print('---------------------------now here')
 
-		self.emitCode(OpCode.OP_RET, at_line=line_num)
-		self.emitByte(self.resolveLocalVariable("@retptr"), at_line=line_num)
+		self.emitCode(OpCode.OP_RET, at_line=line_num) #this is single OpCode
+		# self.emitByte(self.resolveLocalVariable("@retptr"), at_line=line_num)
 
 		self.endScope(line_num, is_function=True)
 
@@ -418,6 +432,10 @@ class Compiler:
 		for arg in function_expression.args:#pop all argument 
 			print('arg')
 			self.emitCode(OpCode.OP_POP, at_line=line_num)
+
+		#push the return value in the stack
+
+		self.emitCode(OpCode.OP_LOAD_EBX, at_line=line_num)
 		# print("============")
 		# breakpoint()
 		return line_num

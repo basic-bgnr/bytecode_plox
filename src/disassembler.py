@@ -20,16 +20,14 @@ class Disassembler:
                                      OpCode.OP_SET_LOCAL,
                                      OpCode.OP_JMP_IF_FALSE,
                                      OpCode.OP_JMP,
-                                     OpCode.OP_RET,
                                      OpCode.OP_CALL,
                                      OpCode.OP_PUSH]
                          
         ###############################################
         op_codes_stack  = [OpCode.OP_LOAD_LOCAL,
                            OpCode.OP_SET_LOCAL,
-                           # OpCode.OP_JMP_IF_FALSE,
+                           OpCode.OP_JMP_IF_FALSE,
                            OpCode.OP_JMP,
-                           OpCode.OP_RET,
                            OpCode.OP_CALL,
                            OpCode.OP_PUSH]
 

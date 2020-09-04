@@ -40,4 +40,6 @@ class OpCode(Enum):
 
 	OP_CALL = auto(),
 	OP_RET = auto(),
-	
+
+	OP_SET_EBX = auto(),
+	OP_LOAD_EBX = auto(),

@@ -1,5 +1,6 @@
 from opcodes import OpCode
 from values import MasterData, LanguageTypes
+import LanguageConstants
 #Note: The vm's ip counter always points at the next instruction to execute
 class Vm:
     def __init__(self, chunk=None):
@@ -7,8 +8,10 @@ class Vm:
         self.stack = [] # constainer for MasterData
         self.ip = 0
 
-        self.esp = 0
-        self.ebp = 0
+        self.esp = 0 # extended stack pointer
+        self.ebp = 0 # extended base pointer
+
+        self.ebx = LanguageConstants.NIL # return value
 
         self.table = {} #storing reference to
 
@@ -245,13 +248,14 @@ class Vm:
                 # when variable = expr is defined, expr pushes one value in the stack, 
                 # assignment statement pops the value from the stack making the whole 
                 # process producing no changes in the stack
-                value = self.peekStack(stack_entry_index)
+                value = self.peekLocalStack(stack_entry_index)
 
                 self.pushStack(value)
 
             elif (current_op_code == OpCode.OP_SET_LOCAL):
                 stack_entry_index = self.getStackEntryIndex()
-                self.stack[stack_entry_index] = self.popStack()
+                value_to_put = self.popStack()
+                self.stack[stack_entry_index] = value_to_put
 
             elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
                 offset = self.getByte() # get the else condition instruction pointer
@@ -281,9 +285,21 @@ class Vm:
 
                 self.setIP(ip=function_ip_index)
 
+            elif (current_op_code == OpCode.OP_SET_EBX):
+                return_value = self.popStack()
+                self.pushStack(value=return_value)
+
+                self.setEBX(return_value)
+
+            elif (current_op_code == OpCode.OP_LOAD_EBX):
+                stack_value = self.getEBX()
+                self.pushStack(value=stack_value)
+                #once read reset it back to NIL
+                self.setEBX(LanguageConstants.NIL)
+
             elif (current_op_code == OpCode.OP_RET):
-                stack_index = self.getByte()
-                return_pointer = self.peekStack(index=stack_index)
+                # stack_index = self.getByte()
+                return_pointer = self.peekFunctionFrameStack(index=-1)
                 # print(' return pointer value : ', return_pointer.value)
 
                 #here we need to int the returned value since it's being converted from internal NUMBER type which is floating point
@@ -298,7 +314,10 @@ class Vm:
 
                 self.setEBP(ebp=EBP.value) # restore previous value to ebp
 
-                self.pushStack(EBP) # push the same value in the stack, it is done because the function must change the stack as it's evaluated as expression
+                self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
+
+                # self.setEBX(LanguageConstants.NIL)
+
 
             else:
                 self.reportVMError(f"unknown op_code at ip: {self.ip}, current_op_code: {current_op_code}")
@@ -311,15 +330,17 @@ class Vm:
         #abs is done so that, -ve value is not produced when entering block statement, when epb is 0
         # print('ip ', self.ip)
         # print('stack entry value in byte ', self.getByte(), '  ', self.getEBP(), ' -> ',type(self.getByte()), type(self.getEBP()),", ", ' ip-> ', self.ip)
-        ebp = self.getEBP()
-        relative_stack_index = self.getByte()
+        # ebp = self.getEBP()
+        # relative_stack_index = self.getByte()
         # print('stack entry value in byte ', relative_stack_index, '  ', ebp, ' -> ',type(relative_stack_index), type(ebp),", ", ' ip-> ', self.ip)
-        if relative_stack_index > 0: # temp varaible in block are calculated in 
-            return relative_stack_index
+        # if relative_stack_index > 0: # temp varaible in block are calculated in 
 
-        absolute_stack_index = ebp + relative_stack_index -1 #function args are negative
+        #     return relative_stack_index
+
+        # absolute_stack_index = ebp + relative_stack_index -1 #function args are negative
         # print('stack entry index ',absolute_stack_index)
-        return absolute_stack_index
+        # return absolute_stack_index
+        return self.getByte()
 
     def setEBP(self, ebp):
         self.ebp = ebp
@@ -365,6 +386,7 @@ class Vm:
 
     def popStack(self):
         # print(self.ip, ' popping ', f"{[str(s) for s in self.stack[:-1]]}")
+        # print('ebx ', self.getEBX())
         self.reverseESP()
         return self.stack.pop()
 
@@ -372,12 +394,17 @@ class Vm:
         self.advanceESP()
         self.stack.append(value)
         # print(self.ip, ' pushing ', f"{[str(s) for s in self.stack]}")
+        # print('ebx ', self.getEBX())
 
-    def peekStack(self, index):
+    def peekFunctionFrameStack(self, index):
         # breakpoint()
-        if index < 0: #relative indexing for function 
-            return self.stack[self.getEBP()+index-1]
+        # if index < 0: #relative indexing for function 
+        return self.stack[self.getEBP()+index-1]
+        # return self.stack[index]
+
+    def peekLocalStack(self, index):
         return self.stack[index]
+
 
     def getCurrentInstructionLine(self):
         return self.chunk.lineAt(self.ip-1) #ip is already advance before the instruction is run 
@@ -394,3 +421,9 @@ class Vm:
             self.getFromTable(key)
 
         self.table[key] = value
+
+    def setEBX(self, ebx):
+        self.ebx = ebx
+
+    def getEBX(self):
+        return self.ebx
