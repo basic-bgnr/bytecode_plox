@@ -31,6 +31,40 @@ class Compiler:
 		
 		self.caller_ip = None
 
+		self.scope_enitity_relative_point = 0
+
+	def makeScopeEntititiesRelativeTo(self, datum):
+		self.scope_enitity_relative_point = datum
+
+	def getScopeEntittiesDatum(self):
+		return self.scope_enitity_relative_point
+
+	def popScopeEntity(self):
+		return self.scope_entities.pop()
+	def pushScopeEntity(self, scope_entity):
+		self.scope_entities.append(scope_entity)
+
+	def setScopeDepth(self, scope_depth):
+		self.scope_depth = scope_depth
+
+	def getscopeDepth(self):
+		return self.scope_depth
+
+	def advanceScopeDepth(self):
+		return self.setScopeDepth(self.getscopeDepth() + 1)
+
+	def reverseScopeDepth(self):
+		return self.setScopeDepth(self.getscopeDepth() - 1)
+
+	def getScopeEntitiesSize(self):
+		return len(self.scope_entities)
+
+	def isScopeEntitiesEmpty(self):
+		return self.getScopeEntitiesSize() == 0
+
+	def getLastScopeEntityDepth(self):
+		return self.scope_entities[-1].scope_depth
+
 
 	def addToFunctionTable(self, function_name, ip_index):
 		self.function_table[function_name] = ip_index
@@ -72,7 +106,7 @@ class Compiler:
 	def emitByte(self, byte, at_line):
 		self.emitCode(byte, at_line)
 
-	def emitByteAt(self, byte, index):
+	def modifyByteAt(self, byte, index):
 		self.chunk.pushOpCodeAt(byte, index)
 
 	def emitCodes(self, op_code1, op_code2, at_line):
@@ -230,16 +264,15 @@ class Compiler:
 
 
 	def beginScope(self):
-		self.scope_depth += 1
+		self.advanceScopeDepth();
 		
-	def endScope(self, line_num, is_function=False):
-		self.scope_depth -= 1
+	def endScope(self, line_num, is_function_statement=False):
+		self.reverseScopeDepth()
 		# this is for calculating the number of times we need to pop, to remove the local variable from stack
-		while len(self.scope_entities)!=0 and self.scope_entities[-1].scope_depth > self.scope_depth:
-			if not is_function: # op_code for poping in a function is deferred to caller so avoided here
-				print('end scope opp')
+		while not self.isScopeEntitiesEmpty() and self.getLastScopeEntityDepth() > self.getscopeDepth():
+			if not is_function_statement:# function caller is responsible for popping
 				self.emitCode(OpCode.OP_POP, at_line=line_num)
-			self.scope_entities.pop()
+			self.popScopeEntity()
 
 			
 
@@ -272,7 +305,7 @@ class Compiler:
 			return self.addGlobalReassignment(reassignment_statement)
 	
 	def isLocal(self):
-		return self.scope_depth>0
+		return self.getscopeDepth()>0
 
 	def addGlobalReassignment(self, reassignment_statement):
 		line_num = self.compile(reassignment_statement.rvalue)
@@ -299,7 +332,7 @@ class Compiler:
 		#################################################################
 		lvalue_name = assignment_statement.lvalue.expr.literal #local variable name
 
-		scope_entity = ScopeEntity(name=lvalue_name, scope_depth=self.scope_depth)
+		scope_entity = ScopeEntity(name=lvalue_name, scope_depth=self.getscopeDepth())
 		self.addScopeEntity(scope_entity)
 		#################################################################
 
@@ -363,35 +396,34 @@ class Compiler:
 		# add the value in the stack in reverse order, this is done so because resolveVariable functoion reversee the varaible is order to  simulate stack
 		####two dummy value to simulate caller convention#######
 
-		self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=1, index = 0) , default=False)
-		self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=1, index = -1), default=False)
-		
+		self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=self.getscopeDepth(), index = -1) , default=False)
+		self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=self.getscopeDepth(), index = -2), default=False)
+
+
 		#######################################################
 
-		indices = count(start=-2, step=-1)
+		indices = count(start=-3, step=-1)
 
 		for index, param in zip(indices, reversed(function_statement.params_list)):
-			self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=1, index=index), default=False)
+			self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=self.getscopeDepth(), index=index), default=False)
 
+		middle_point = self.getScopeEntitiesSize()
+		self.makeScopeEntititiesRelativeTo(datum=middle_point)
 		
-		# breakpoint()
-		
-
-
-		# for param in function_statement.params_list:
-		# 	self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=1))
-
-		# self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=1))
-		# self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=1))
-		#######################################################
 
 		line_num = self.compile(function_statement.block_statement)
+
+
+		self.makeScopeEntititiesRelativeTo(datum=0)
 		# print('---------------------------now here')
 
 		self.emitCode(OpCode.OP_RET, at_line=line_num) #this is single OpCode
 		# self.emitByte(self.resolveLocalVariable("@retptr"), at_line=line_num)
 
-		self.endScope(line_num, is_function=True)
+		self.endScope(line_num, is_function_statement=True)#the second arguemnt causes to not emit `pop` code
+
+
+		#push the return value in the stack
 
 		# breakpoint()
 		# self.scope_entities.pop()#remove retptr and ebp
@@ -423,19 +455,27 @@ class Compiler:
 
 		ret_pointer_index = self.makeConstant(constant=MasterData(tipe=LanguageTypes.NUMBER, value=self.getNextIPLocation()))#this is to modify the next byte), at_line=line_num)
 		# print('ret_pointer_index ', ret_pointer_index)
-		self.emitByteAt(byte=ret_pointer_index, index=index_to_modify_ret_ptr)# this set the value of the byte previously set o None, as we now know where the function is going to end
+		self.modifyByteAt(byte=ret_pointer_index, index=index_to_modify_ret_ptr)# this set the value of the byte previously set o None, as we now know where the function is going to end
 
-	
+
+		# The following pop instruction is not required because the endscope() function does that already
 
 		self.emitCode(OpCode.OP_POP, at_line=line_num) #pop the ret_ptr
-		# print("-------------")
+		# # print("-------------")
 		for arg in function_expression.args:#pop all argument 
-			print('arg')
+			# print('arg')
 			self.emitCode(OpCode.OP_POP, at_line=line_num)
+
+		self.emitCode(op_code=OpCode.OP_LOAD_EBX, at_line=line_num)
 
 		#push the return value in the stack
 
-		self.emitCode(OpCode.OP_LOAD_EBX, at_line=line_num)
+
+
+		# self.emitCode(OpCode.OP_LOAD_EBX, at_line=line_num)
+
+
+
 		# print("============")
 		# breakpoint()
 		return line_num
@@ -444,9 +484,11 @@ class Compiler:
 
 	def addScopeEntity(self, scope_entity, default=True):
 		if default:
-			scope_entity.index = len(self.scope_entities)
-		self.scope_entities.append(scope_entity)
-		print([str(s) for s in self.scope_entities])
+			scope_entity.index = self.getScopeEntitiesSize() - self.getScopeEntittiesDatum() #this makes the referencing relative
+
+		self.pushScopeEntity(scope_entity)
+
+		# print([str(s) for s in self.scope_entities])
 
 	def getInstructionPointerSize(self):
 		return self.chunk.getCodesLength()
@@ -469,7 +511,7 @@ class Compiler:
 			branch_if_end_instruction_pointer = self.getInstructionPointerSize()-1 #points to above byte
 			offset_if = branch_if_end_instruction_pointer - branch_if_start_instruction_pointer # the number of additional line pushed in the codes stack
 
-			self.emitByteAt(byte=offset_if, index=branch_if_start_instruction_pointer)# update the None byte to offset
+			self.modifyByteAt(byte=offset_if, index=branch_if_start_instruction_pointer)# update the None byte to offset
 
 			return if_line_num
 
@@ -483,7 +525,7 @@ class Compiler:
 
 			offset_if = branch_if_end_instruction_pointer - branch_if_start_instruction_pointer # the number of additional line pushed in the codes stack
 
-			self.emitByteAt(byte=offset_if, index=branch_if_start_instruction_pointer)# update the None byte to offset
+			self.modifyByteAt(byte=offset_if, index=branch_if_start_instruction_pointer)# update the None byte to offset
 
 			
 			else_line_num = self.compile(if_statement.else_block_statement)
@@ -492,7 +534,7 @@ class Compiler:
 
 			offset_else = branch_else_end_instruction_pointer - branch_if_end_instruction_pointer
 			
-			self.emitByteAt(byte=offset_else, index=branch_if_end_instruction_pointer)# push offset to the end of true statement's end
+			self.modifyByteAt(byte=offset_else, index=branch_if_end_instruction_pointer)# push offset to the end of true statement's end
 			
 			return else_line_num
 
@@ -513,7 +555,7 @@ class Compiler:
 		
 		false_condition_instruction_pointer = self.getInstructionPointerSize() - 1 #this points to the instruction after the above OP_JMP
 		false_offset = false_condition_instruction_pointer - branch_if_start_instruction_pointer
-		self.emitByteAt(byte=false_offset, index=branch_if_start_instruction_pointer)
+		self.modifyByteAt(byte=false_offset, index=branch_if_start_instruction_pointer)
 
 
 

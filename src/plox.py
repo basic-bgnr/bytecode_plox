@@ -76,11 +76,12 @@ class Lox:
         parser.parse()
 
         compiler = Compiler()
-        compiler.compileAll(parser.AST)
+        entry_point = compiler.compileAll(parser.AST)
 
         disassembler = Disassembler(compiler.chunk)
        
-        vm.run(compiler.chunk)
+        vm.run(compiler.chunk, start_at = entry_point)
+        
 
     @staticmethod
     def debugRun(source_code, vm):
@@ -106,8 +107,10 @@ class Lox:
         print(disassembler.pretty_print())
         print("########################################################################")
 
+        import time
+        a = time.time()
         vm.run(compiler.chunk, start_at = entry_point)
-
+        print('time ', time.time() -a)
 
 #run the program by calling the static function main of the interpreter
 Lox.main()

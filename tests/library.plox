@@ -1,0 +1,63 @@
+# fun setTimeOut(func, time_ms){
+#   var start = timer();
+#   while (timer() - start)/1000000 < time_ms {
+#   };
+#   func();
+# };
+
+# fun test_setTimeOut() {
+# 	var counter = 1;
+# 	var time = 1000;
+# 	var start = timer();
+# 	while counter < 10 {
+# 	  	setTimeOut(|| { print counter; }, time*counter);
+# 	  	counter += 1;
+# 	};
+	
+# 	print "time : " + str((timer()-start)/1000000000) + " secs.";
+# };
+
+fun abs(n){
+    if n<0 { return -n;} else { return n; };
+};
+
+
+fun sqrt(a) {
+    var x = a/2;
+    var tolerance = 0.000_1;
+    while true {
+          var x_ = x - (x*x-a)/(2*x);
+          if abs(x_-x) < tolerance {
+                 return x_;
+          };
+          x = x_;
+    };
+};
+
+fun main(){
+  print("sqrt of ");
+  for(var i = 1; i <= 100; i+=1 ){
+    print(sqrt(i));
+  };
+};
+
+main();
+# fun range(a, b) { 
+#   var return_obj = array();
+#   while a < b { 
+#     push(return_obj, a);
+#     a += 1;
+#   };
+#   return return_obj;
+# };
+
+# fun map(func, lst) { 
+#   var counter = 0;
+#   var length = len(lst);
+#   var output = array();
+#   while counter < length {
+#     push(output, func(at(lst, counter)));
+#     counter += 1;
+#   };
+#   return output;  
+# };

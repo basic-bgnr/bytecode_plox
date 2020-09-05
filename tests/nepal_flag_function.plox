@@ -1,0 +1,20 @@
+
+
+fun draw(graphic, graphic_increment, length) {
+    while length!=0 {
+        print graphic;
+        graphic += graphic_increment;
+        length -= 1;
+   };
+};
+
+fun main(){
+	#upper triangle
+	draw("*", "*", 10);
+	#lower triangle
+	draw("*", "**", 10);
+	#mast
+	draw("*", "", 4);
+};
+
+main();

@@ -690,7 +690,7 @@ class Parser:
                 if (self.peek().tipe == TokenType.EOF):
                     raise Exception(f"no matching parenthesis at line {left_paren.line}")
                 elif (self.peek().tipe == TokenType.COMMA):
-                    print('comman')
+                    # print('comman')
                     self.advance()#consume the comma
                     arg = self.parseExpr()
                     args.append(arg)
@@ -702,15 +702,15 @@ class Parser:
         ##################################
         caller_expr = self.literalExpr()
         while (True): 
-            print("true")
+            # print("true")
             if (self.peek().tipe == TokenType.LEFT_PAREN):
-                print('paren')
+                # print('paren')
                 left_paren = self.advance()
                 args = argument_list()
                 caller_expr = FunctionExpression(caller_expr, args)
             #new code for dot operator
             elif(self.peek().tipe == TokenType.DOT):
-                print('dot')
+                # print('dot')
                 dot = self.advance()
                 token_prop_or_method = self.advance()
                 caller_expr = GetExpression(caller_expr, prop_or_method=token_prop_or_method)

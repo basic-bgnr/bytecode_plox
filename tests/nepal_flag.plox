@@ -1,0 +1,34 @@
+fun main(){
+	var counter = 0;
+	var upper_flag = 10;
+	var lower_flag = 10;
+	var mast = 4;
+
+	var star = "*";
+
+	while counter < upper_flag {
+	   print star;
+	   star += "*";
+	   counter += 1;
+	};
+
+	counter = 0;
+	star = "*";
+
+	while counter < lower_flag {
+	   print star;
+	   star += "**";
+	   counter += 1;
+	};
+
+	counter = 0;
+	star = "*";
+
+	while counter < mast {
+	   print star;
+	   counter += 1;
+	};
+};
+
+main();
+

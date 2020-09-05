@@ -41,7 +41,7 @@ class Vm:
        
         if chunk is not None:
             self.chunk = chunk
-            self.ip = start_at
+            self.setIP(start_at)
 
         while current_op_code := self.getOpCode():
             # breakpoint()
@@ -242,20 +242,21 @@ class Vm:
                 # print('op_code define ', self.table)
             elif (current_op_code == OpCode.OP_LOAD_LOCAL):
                 # breakpoint()
-                stack_entry_index = self.getStackEntryIndex()
+                stack_entry_index = self.getCurrentStackEntryIndex()
 
 
                 # when variable = expr is defined, expr pushes one value in the stack, 
                 # assignment statement pops the value from the stack making the whole 
                 # process producing no changes in the stack
-                value = self.peekLocalStack(stack_entry_index)
+                value = self.peekStack(stack_entry_index)
 
                 self.pushStack(value)
 
             elif (current_op_code == OpCode.OP_SET_LOCAL):
-                stack_entry_index = self.getStackEntryIndex()
+                stack_entry_index = self.getCurrentStackEntryIndex()
                 value_to_put = self.popStack()
-                self.stack[stack_entry_index] = value_to_put
+
+                self.putAtStack(index=stack_entry_index, value=value_to_put)
 
             elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
                 offset = self.getByte() # get the else condition instruction pointer
@@ -287,7 +288,7 @@ class Vm:
 
             elif (current_op_code == OpCode.OP_SET_EBX):
                 return_value = self.popStack()
-                self.pushStack(value=return_value)
+                # self.pushStack(value=return_value)
 
                 self.setEBX(return_value)
 
@@ -298,13 +299,16 @@ class Vm:
                 self.setEBX(LanguageConstants.NIL)
 
             elif (current_op_code == OpCode.OP_RET):
-                # stack_index = self.getByte()
-                return_pointer = self.peekFunctionFrameStack(index=-1)
+                # breakpoint()
+
+                relative_index = -2 # ret ptr is -2 offset from the ebp
+                stack_index = relative_index + self.getEBP()
+                return_pointer = self.peekStack(index=stack_index)
                 # print(' return pointer value : ', return_pointer.value)
 
                 #here we need to int the returned value since it's being converted from internal NUMBER type which is floating point
                 self.setIP(int(return_pointer.value)) #jump to the caller environment 
-
+# 
                 #on ret we pop all the value of the stack until ebp is equal to esp
                 while self.getEBP() != self.getESP():
                     # print(self.getEBP(), '-----esp ', self.getESP())
@@ -314,18 +318,19 @@ class Vm:
 
                 self.setEBP(ebp=EBP.value) # restore previous value to ebp
 
-                self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
+                # self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
 
                 # self.setEBX(LanguageConstants.NIL)
 
 
+
             else:
-                self.reportVMError(f"unknown op_code at ip: {self.ip}, current_op_code: {current_op_code}")
+                self.reportVMError(f"unknown op_code at ip: {self.getIP()}, current_op_code: {current_op_code}")
         
         # print('computed ', [str(v) for v in self.stack])
 
     # calculate the location of stack variable when function frame is entered
-    def getStackEntryIndex(self):
+    def getCurrentStackEntryIndex(self):
         # breakpoint()
         #abs is done so that, -ve value is not produced when entering block statement, when epb is 0
         # print('ip ', self.ip)
@@ -340,7 +345,8 @@ class Vm:
         # absolute_stack_index = ebp + relative_stack_index -1 #function args are negative
         # print('stack entry index ',absolute_stack_index)
         # return absolute_stack_index
-        return self.getByte()
+
+        return self.getEBP() + self.getByte()
 
     def setEBP(self, ebp):
         self.ebp = ebp
@@ -357,11 +363,11 @@ class Vm:
         return self.esp
 
     def getOpCode(self):
-
         if (not self.isAtEnd()):
-            ret_value = self.chunk.codeAt(self.ip)
+            ret_value = self.chunk.codeAt(self.getIP())
             self.advance()
             return ret_value
+        # breakpoint()
         return None
 
     def setIP(self, ip):
@@ -370,12 +376,14 @@ class Vm:
     def offsetIP(self, offset):
         self.ip += offset
 
+    def getIP(self):
+        return self.ip
 
     def isAtEnd(self):
-        return len(self.chunk.codes) <= self.ip
+        return self.getIP() >= len(self.chunk.codes)
 
     def advance(self):
-        self.ip += 1
+        self.setIP(ip=self.getIP() + 1)
 
     def getByte(self):
         return self.getOpCode()
@@ -396,25 +404,24 @@ class Vm:
         # print(self.ip, ' pushing ', f"{[str(s) for s in self.stack]}")
         # print('ebx ', self.getEBX())
 
-    def peekFunctionFrameStack(self, index):
+    def peekStack(self, index):
         # breakpoint()
         # if index < 0: #relative indexing for function 
-        return self.stack[self.getEBP()+index-1]
-        # return self.stack[index]
-
-    def peekLocalStack(self, index):
         return self.stack[index]
+        # return self.stack[index]
+    def putAtStack(self, index, value):
+        self.stack[index] = value
 
-
+   
     def getCurrentInstructionLine(self):
-        return self.chunk.lineAt(self.ip-1) #ip is already advance before the instruction is run 
+        return self.chunk.lineAt(self.getIP()-1) #ip is already advance before the instruction is run 
 
     def getFromTable(self, key):
         try:
             return self.table[key]
         except KeyError as e:
-                    self.reportError(f"variable `{key}` is not defined")
-        
+            self.reportError(f"variable `{key}` is not defined")
+    
 
     def setIntoTable(self, key, value, check_if_exists=True):
         if check_if_exists:

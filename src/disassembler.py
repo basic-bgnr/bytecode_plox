@@ -1,5 +1,5 @@
 from opcodes import OpCode
-
+from itertools import count
 class Disassembler:
     def __init__(self, chunk):
         self.chunk = chunk
@@ -10,7 +10,9 @@ class Disassembler:
 
     def pretty_print(self):
         output_string = []
-        line_code_pair = zip(self.chunk.lines, self.chunk.codes)
+        # line_code_pair = zip(self.chunk.lines, self.chunk.codes)
+        line_code_pair = zip(count(0, 1), self.chunk.codes)
+
 
         op_codes_followed_by_bytes = [OpCode.OP_LOAD_CONSTANT, 
                                      OpCode.OP_DEFINE_GLOBAL,

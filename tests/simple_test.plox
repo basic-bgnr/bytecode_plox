@@ -228,21 +228,29 @@
 
 # main();
 
-fun answer_to_life(a) {
-	return a;
-};
-fun main(){
-	var a = answer_to_life(10);
-	print "the answer to life is ";
-	print a;	
-};
-main();
+# fun answer_to_life(a) {
+
+# };
+
+# fun main(){
+# 	# var a = answer_to_life(10);
+# 	var a = answer_to_life(10);
+# 	print "the answer to life is ";
+# 	print a;
+
+# };
+
+# main();
+
+# fun id(a){
+# 	return a;
+# };
 
 # fun fib(n){
 # 	if n <= 2 {
-# 		return 1;
+# 		return id(1);
 # 	}else{
-# 		return fib(n-2) + fib(n-1);
+# 		return id(fib(n-2)) + id(fib(n-1));
 # 	};
 # };
 
@@ -259,3 +267,59 @@ main();
 # };
 
 # main();
+
+
+
+
+# fun main(){
+# 	for(var i = 0; i <= 10; i+=1){
+# 		print i;
+# 	};
+
+# 	var ii = 0;
+	
+# 	while(ii!=10){
+# 		print ii;
+# 		ii += 1;
+# 	};
+# };
+
+# main();
+
+
+
+
+
+# fun fib(n){
+# 	if n == 1{
+# 		return 1;
+# 	};
+# 	return None;
+# };
+
+# fun main(){
+
+# 	var a = fib(1);
+# 	print a;
+# };
+
+# main();
+
+
+fun fib(n){
+	if n < 2 {
+		return 1;
+	}else{
+		return fib(n-2) + fib(n-1);
+	};
+};
+
+fun main(){
+
+	var limit = 20;
+	# for(var i = 0; i < limit; i += 1) {
+		print (fib(limit));
+	# };
+};
+
+main();
