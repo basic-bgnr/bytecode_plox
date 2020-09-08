@@ -1,0 +1,24 @@
+fun fact(n){
+  match n {
+    case <=0     => return 1
+    case default => return n * fact(n-1)
+  };
+};
+fun fact_iter(n) {
+   var result = 1;
+   while n > 1 {
+     result *= n;
+     #print result;
+     n -= 1;
+   };
+   return result;
+};
+   
+
+fun main(){
+  var fact_n = 100;
+  #print fact(fact_n);
+  print fact_iter(fact_n);
+};
+
+main();
