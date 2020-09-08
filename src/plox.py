@@ -78,9 +78,9 @@ class Lox:
         compiler = Compiler()
         entry_point = compiler.compileAll(parser.AST)
 
-        disassembler = Disassembler(compiler.chunk)
+        disassembler = Disassembler(compiler.chunk, compiler.initializing_codes)
        
-        vm.run(compiler.chunk, start_at = entry_point)
+        # vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = entry_point)
         
 
     @staticmethod

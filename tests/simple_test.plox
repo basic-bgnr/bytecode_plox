@@ -306,21 +306,23 @@
 # main();
 
 
-# fun fib(n){
-# 	if n < 2 {
-# 		return 1;
-# 	}else{
-# 		return fib(n-2) + fib(n-1);
-# 	};
-# };
+fun fib(n){
+	if n < 2 {
+		return 1;
+	}else{
+		return fib(n-2) + fib(n-1);
+	};
+};
 
-# fun main(){
+fun main(){
 
-# 	var limit = 20;
-# 	# for(var i = 0; i < limit; i += 1) {
-# 		print (fib(limit));
-# 	# };
-# };
+	var limit = 10;
+	for(var i = 0; i < limit; i += 1) {
+		print (fib(i));
+	};
+};
+
+main();
 
 # main();
 # fun modifyString(str, format){
@@ -331,21 +333,21 @@
 # 	return "!!! " + str + "!!!";
 # };
 
-fun add(a, b){
-	return a + b;
-};
+# fun add(a, b){
+# 	return a + b;
+# };
 
-fun main(){
-	# var a = modifyString;
-	# # a + 1;
-	# print a;
-	# var b = "modify string";
-	# print b;
-	# print a("hello world! ", format);
+# fun main(){
+# 	# var a = modifyString;
+# 	# # a + 1;
+# 	# print a;
+# 	# var b = "modify string";
+# 	# print b;
+# 	# print a("hello world! ", format);
 
-	var a = add;
-	print a;
-	print a(100);
-};
+# 	var a = add;
+# 	print a;
+# 	print a(100, 200);
+# };
 
-main();
+# main(100);

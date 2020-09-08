@@ -16,8 +16,8 @@ fun fact_iter(n) {
    
 
 fun main(){
-  var fact_n = 100;
-  #print fact(fact_n);
+  var fact_n = 10;
+  print fact(fact_n);
   print fact_iter(fact_n);
 };
 
