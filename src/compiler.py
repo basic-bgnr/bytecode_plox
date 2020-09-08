@@ -1,7 +1,7 @@
 from ByteArray import Chunk
 from opcodes import OpCode
 from lexer import TokenType
-from values import LanguageTypes, MasterData
+from values import LanguageTypes, MasterData, FunctionObject
 import LanguageConstants
 
 from itertools import count
@@ -32,6 +32,15 @@ class Compiler:
 		self.caller_ip = None
 
 		self.scope_enitity_relative_point = 0
+
+		self.initializing_codes = Chunk() #runtime setup codes
+
+		self.initializing_codes.linkConstantPoolWithParent(parent=self.chunk)
+
+
+	def addInitializingCode(self, code, line_num):
+		#todo: convert the initializing_code vairable into bytearray class
+		self.initializing_codes.pushOpCode(op_code=code, at_line=line_num)
 
 	def makeScopeEntititiesRelativeTo(self, datum):
 		self.scope_enitity_relative_point = datum
@@ -89,6 +98,7 @@ class Compiler:
 		# except:
 		# 	raise Exception("program must have function named 'main' as the only entry point")
 		# breakpoint()
+
 		return self.caller_ip
 
 
@@ -388,9 +398,26 @@ class Compiler:
 		# print('in function statemetn')
 		
 		ip = self.getNextIPLocation()
-		self.addToFunctionTable(function_name=function_statement.function_identifier_expression.expr.literal, ip_index=ip)
+		##############################################################################
 
+		function_name = function_statement.function_identifier_expression.expr.literal
+		params_length = len(function_statement.params_list)
 
+		function_constant = MasterData(tipe=LanguageTypes.FUNCTION, value=FunctionObject(name=function_name, arity=params_length, ip=ip))
+		function_index = self.makeConstant(constant=function_constant)
+
+		#this is for use in the vm for indexing function table 
+		function_name_constant = MasterData(tipe=LanguageTypes.STRING, value=function_name)
+		function_name_constant_index = self.makeConstant(constant=function_name_constant)
+
+		##insert these statement at the beginning of the program so that function can be called at runtime instead at compiletime
+		self.addInitializingCode(OpCode.OP_LOAD_CONSTANT, line_num=0)
+		self.addInitializingCode(function_index, line_num=0)
+
+		self.addInitializingCode(OpCode.OP_DEFINE_GLOBAL, line_num=0)
+		self.addInitializingCode(function_name_constant_index, line_num=0)
+
+		###################################################
 		self.beginScope()
 
 		# add the value in the stack in reverse order, this is done so because resolveVariable functoion reversee the varaible is order to  simulate stack
@@ -447,10 +474,14 @@ class Compiler:
 		self.emitByte(byte=None, at_line=line_num) # we fill it with none, because now we don't know where the return pointer should point to
 
 		
+		self.pushConstant(MasterData(tipe=LanguageTypes.NUMBER, value=len(function_expression.args)), at_line=line_num) #pus the current no of argument supplied to the function, this used for checking if correct no. of arugment is supplied during runtime
+		self.compile(function_expression.caller_expr) #load the function object in the stack
+
 		self.emitCode(OpCode.OP_CALL, at_line=line_num)
 		function_name = function_expression.caller_expr.expr.literal
 		#byte can also be made cosntant, OP_CONSTANT
-		self.emitByte(byte=self.getFunctionPointer(function_name), at_line=line_num)
+
+		# self.emitByte(byte=self.getFunctionPointer(function_name), at_line=line_num)
 
 
 		ret_pointer_index = self.makeConstant(constant=MasterData(tipe=LanguageTypes.NUMBER, value=self.getNextIPLocation()))#this is to modify the next byte), at_line=line_num)

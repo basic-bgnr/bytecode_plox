@@ -187,7 +187,7 @@ class Scanner:
 			#self.had_error
 			#report the error to the interpreter but do not stop the parsing
 			#determine other souce of error
-			raise Exception(f"unknown token at line {self.line} and row {self.current}")
+			raise Exception(f"unknown token at line {self.line}")
 
 	def peekAndMatch(self, expected_lexeme):
 		next_lexeme = self.peek()#peek the next value

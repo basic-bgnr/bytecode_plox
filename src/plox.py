@@ -102,14 +102,14 @@ class Lox:
 
         print('entry point ', entry_point)
 
-        disassembler = Disassembler(compiler.chunk)
+        disassembler = Disassembler(compiler.chunk, compiler.initializing_codes)
         print("#############################ByteCode###################################")
         print(disassembler.pretty_print())
         print("########################################################################")
 
         import time
         a = time.time()
-        vm.run(compiler.chunk, start_at = entry_point)
+        vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = entry_point)
         print('time ', time.time() -a)
 
 #run the program by calling the static function main of the interpreter

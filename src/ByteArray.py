@@ -14,8 +14,12 @@ class Chunk:
         self._constant_map = defaultdict(lambda : None, {constant: index for index, constant in enumerate(self.constants)})# key: constant, value: index,=> self.constants[self._constant_map[key]]
 
 
-    def push(self, opcode, at_line):
-        self.codes.append(opcode)
+    def linkConstantPoolWithParent(self, parent):
+        self.constants = parent.constants
+        self._constant_map = parent._constant_map
+
+    def pushByte(self, byte, at_line):
+        self.codes.append(byte)
         self.lines.append(at_line)
 
     def pushOpCode(self, op_code, at_line):
@@ -104,8 +108,8 @@ def test():
     #############################################################
 
 
-    byte_array.push(OpCode.OP_ADD, at_line = 1)
-    byte_array.push(OpCode.OP_RETURN, at_line = 1);
+    byte_array.pushOpCode(OpCode.OP_ADD, at_line = 1)
+    byte_array.pushOpCode(OpCode.OP_RETURN, at_line = 1);
 
 
     print(Disassembler(byte_array).disassemble())

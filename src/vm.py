@@ -4,6 +4,13 @@ import LanguageConstants
 #Note: The vm's ip counter always points at the next instruction to execute
 class Vm:
     def __init__(self, chunk=None):
+        self.initializeChunk(chunk=chunk)
+
+        self.table = {} #the reason this is only initialized once is due to the fact that initialization code pupulates it which is further utilized byt the program.
+
+       
+
+    def initializeChunk(self, chunk=None):
         self.chunk = chunk
         self.stack = [] # constainer for MasterData
         self.ip = 0
@@ -13,12 +20,11 @@ class Vm:
 
         self.ebx = LanguageConstants.NIL # return value
 
-        self.table = {} #storing reference to
-
         if self.chunk is not None:
             self.code_length = len(self.chunk.codes)
         else:
             self.code_length = 0
+
 
 
     def reportVMError(self, message):
@@ -43,306 +49,327 @@ class Vm:
             return
         self.reportError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
-    def run(self, chunk=None, start_at=0):
-       
-        if chunk is not None:
-            self.__init__(chunk=chunk)
-            self.setIP(start_at)
+    def assertArgumentEquality(self, function, number):
+        if (function.value.arity == number.value):
+            return 
+        self.reportError(f"Argument mismatch for function {function}\nExpecting: {function.value.arity} args\nGot: {number.value} args")
 
-        while current_op_code := self.getOpCode():
+    def exec(self, current_op_code):
+        # breakpoint()
+        if (current_op_code == OpCode.OP_LOAD_CONSTANT):
+            constant_to_load =self.loadConstant()
+            self.pushStack(constant_to_load)
+
+        elif (current_op_code == OpCode.OP_ADD):
+            op1 = self.popStack() #MasterData
+            op2 = self.popStack() #MasterData
+
+            self.assertOptionalTypes(op1, LanguageTypes.NUMBER, LanguageTypes.STRING)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value + op2.value)
+
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_SUB):
+            op1 = self.popStack()
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value - op2.value)
+
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_MUL):
+            op1 = self.popStack()
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value * op2.value)
+
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_DIV):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value / op2.value)
+
+            self.pushStack(output)
+
+        ##################################################################################################
+        elif (current_op_code == OpCode.OP_EQUAL):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value == op2.value)
+
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_LESS):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value < op2.value)
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_LESS_EQUAL):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+           
+            output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value <= op2.value)
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_GREATER):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+            
+            output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value > op2.value)
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_GREATER_EQUAL):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+            
+            output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value >= op2.value)
+            self.pushStack(output)
+
+        ##################################################################################################
+        elif (current_op_code == OpCode.OP_AND):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.BOOLEAN)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value and op2.value)
+
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_OR):
+            op1 = self.popStack() 
+            op2 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.BOOLEAN)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value or op2.value)
+
+            self.pushStack(output)
+
+        ##################################################################################################
+        elif (current_op_code == OpCode.OP_NEG):
+            op1 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            output = MasterData(tipe=op1.tipe, value = -op1.value)
+
+            self.pushStack(output)
+
+        elif (current_op_code == OpCode.OP_NOT):
+            op1 = self.popStack()
+
+            self.assertType(op1, LanguageTypes.BOOLEAN)
+            output = MasterData(tipe=op1.tipe, value = not op1.value)
+
+            self.pushStack(output)
+        ##################################################################################################
+
+        elif (current_op_code == OpCode.OP_PRINT):
+            #the last value of the stack is popped because the very essence of statement is that 
+            # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
+            # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
+            op = self.popStack()
+            print(f"{op}")
             # breakpoint()
 
-            # if (current_op_code == OpCode.OP_RETURN):
-            #     return self.popStack()
 
-            if (current_op_code == OpCode.OP_LOAD_CONSTANT):
-                self.pushStack(self.loadConstant())
 
-            elif (current_op_code == OpCode.OP_ADD):
-                op1 = self.popStack() #MasterData
-                op2 = self.popStack() #MasterData
+        elif (current_op_code == OpCode.OP_POP):
+            self.popStack()
 
-                self.assertOptionalTypes(op1, LanguageTypes.NUMBER, LanguageTypes.STRING)
-                self.assertTypeEquality(op1, op2)
+        elif (current_op_code == OpCode.OP_PUSH):
+            byte = self.advanceByte()
+            data = MasterData(tipe=LanguageTypes.NUMBER, value=byte)
+            self.pushStack(value=data)
 
-                output = MasterData(tipe=op1.tipe, value = op1.value + op2.value)
 
-                self.pushStack(output)
 
-            elif (current_op_code == OpCode.OP_SUB):
-                op1 = self.popStack()
-                op2 = self.popStack()
+        elif (current_op_code == OpCode.OP_PRINT):
+            #the last value of the stack is popped because the very essence of statement is that 
+            # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
+            # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
+            op = self.popStack()
+            # print(op.value)
 
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
+        elif (current_op_code == OpCode.OP_DEFINE_GLOBAL):
+            variable_name = self.loadConstant()
+            # when variable = expr is defined, expr pushes one value in the stack, 
+            # assignment statement pops the value from the stack making the whole 
+            # process producing no changes in the stack
+            return_value = self.popStack()
+            self.setIntoTable(key=variable_name.value, value=return_value, check_if_exists=False)
+            # self.table[variable_name.value] = return_value
 
-                output = MasterData(tipe=op1.tipe, value = op1.value - op2.value)
+            # print('op_code define ', self.table)
 
-                self.pushStack(output)
+        elif (current_op_code == OpCode.OP_LOAD_GLOBAL):
+            variable_name = self.loadConstant()
+            ret_value = self.getFromTable(key=variable_name.value)
+            self.pushStack(ret_value) #the net effect is that op_load_global pushes one value in the stack
 
-            elif (current_op_code == OpCode.OP_MUL):
-                op1 = self.popStack()
-                op2 = self.popStack()
+        elif (current_op_code == OpCode.OP_REDEFINE_GLOBAL):
+            variable_name = self.loadConstant()
+            # when variable = expr is defined, expr pushes one value in the stack, 
+            # assignment statement pops the value from the stack making the whole 
+            # process producing no changes in the stack
+            return_value = self.popStack()
 
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
+            self.setIntoTable(key=variable_name.value, value=return_value, check_if_exists=True)
 
-                output = MasterData(tipe=op1.tipe, value = op1.value * op2.value)
+            # print('op_code define ', self.table)
+        elif (current_op_code == OpCode.OP_LOAD_LOCAL):
+            # breakpoint()
+            stack_entry_index = self.getCurrentStackEntryIndex()
 
-                self.pushStack(output)
 
-            elif (current_op_code == OpCode.OP_DIV):
-                op1 = self.popStack() 
-                op2 = self.popStack()
+            # when variable = expr is defined, expr pushes one value in the stack, 
+            # assignment statement pops the value from the stack making the whole 
+            # process producing no changes in the stack
+            value = self.peekStack(stack_entry_index)
 
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
+            self.pushStack(value)
 
-                output = MasterData(tipe=op1.tipe, value = op1.value / op2.value)
+        elif (current_op_code == OpCode.OP_SET_LOCAL):
+            stack_entry_index = self.getCurrentStackEntryIndex()
+            value_to_put = self.popStack()
 
-                self.pushStack(output)
+            self.putAtStack(index=stack_entry_index, value=value_to_put)
 
-            ##################################################################################################
-            elif (current_op_code == OpCode.OP_EQUAL):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertTypeEquality(op1, op2)
-
-                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value == op2.value)
-
-                self.pushStack(output)
-
-            elif (current_op_code == OpCode.OP_LESS):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
-
-                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value < op2.value)
-                self.pushStack(output)
-
-            elif (current_op_code == OpCode.OP_LESS_EQUAL):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
-               
-                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value <= op2.value)
-                self.pushStack(output)
-
-            elif (current_op_code == OpCode.OP_GREATER):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
-                
-                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value > op2.value)
-                self.pushStack(output)
-
-            elif (current_op_code == OpCode.OP_GREATER_EQUAL):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.NUMBER)
-                self.assertTypeEquality(op1, op2)
-                
-                output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value >= op2.value)
-                self.pushStack(output)
-
-            ##################################################################################################
-            elif (current_op_code == OpCode.OP_AND):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.BOOLEAN)
-                self.assertTypeEquality(op1, op2)
-
-                output = MasterData(tipe=op1.tipe, value = op1.value and op2.value)
-
-                self.pushStack(output)
-
-            elif (current_op_code == OpCode.OP_OR):
-                op1 = self.popStack() 
-                op2 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.BOOLEAN)
-                self.assertTypeEquality(op1, op2)
-
-                output = MasterData(tipe=op1.tipe, value = op1.value or op2.value)
-
-                self.pushStack(output)
-
-            ##################################################################################################
-            elif (current_op_code == OpCode.OP_NEG):
-                op1 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.NUMBER)
-                output = MasterData(tipe=op1.tipe, value = -op1.value)
-
-                self.pushStack(output)
-
-            elif (current_op_code == OpCode.OP_NOT):
-                op1 = self.popStack()
-
-                self.assertType(op1, LanguageTypes.BOOLEAN)
-                output = MasterData(tipe=op1.tipe, value = not op1.value)
-
-                self.pushStack(output)
-            ##################################################################################################
-
-            elif (current_op_code == OpCode.OP_PRINT):
-                #the last value of the stack is popped because the very essence of statement is that 
-                # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
-                # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
-                op = self.popStack()
-                print(op.value)
-
-
-
-            elif (current_op_code == OpCode.OP_POP):
-                self.popStack()
-
-            elif (current_op_code == OpCode.OP_PUSH):
-                byte = self.getByte()
-                data = MasterData(tipe=LanguageTypes.NUMBER, value=byte)
-                self.pushStack(value=data)
-
-
-
-            elif (current_op_code == OpCode.OP_PRINT):
-                #the last value of the stack is popped because the very essence of statement is that 
-                # it leaves the stack unmodified. when `print expr` is evaluated the `expr` modifies the 
-                # the stack by adding a single result in the stack after the `popstack` the stack remain unchanged
-                op = self.popStack()
-                # print(op.value)
-
-            elif (current_op_code == OpCode.OP_DEFINE_GLOBAL):
-                variable_name = self.loadConstant()
-                # when variable = expr is defined, expr pushes one value in the stack, 
-                # assignment statement pops the value from the stack making the whole 
-                # process producing no changes in the stack
-                return_value = self.popStack()
-                self.setIntoTable(key=variable_name.value, value=return_value, check_if_exists=False)
-                # self.table[variable_name.value] = return_value
-
-                # print('op_code define ', self.table)
-
-            elif (current_op_code == OpCode.OP_LOAD_GLOBAL):
-                variable_name = self.loadConstant()
-                ret_value = self.getFromTable(key=variable_name.value)
-                self.pushStack(ret_value) #the net effect is that op_load_global pushes one value in the stack
-
-            elif (current_op_code == OpCode.OP_REDEFINE_GLOBAL):
-                variable_name = self.loadConstant()
-                # when variable = expr is defined, expr pushes one value in the stack, 
-                # assignment statement pops the value from the stack making the whole 
-                # process producing no changes in the stack
-                return_value = self.popStack()
-
-                self.setIntoTable(key=variable_name.value, value=return_value, check_if_exists=True)
-
-                # print('op_code define ', self.table)
-            elif (current_op_code == OpCode.OP_LOAD_LOCAL):
-                # breakpoint()
-                stack_entry_index = self.getCurrentStackEntryIndex()
-
-
-                # when variable = expr is defined, expr pushes one value in the stack, 
-                # assignment statement pops the value from the stack making the whole 
-                # process producing no changes in the stack
-                value = self.peekStack(stack_entry_index)
-
-                self.pushStack(value)
-
-            elif (current_op_code == OpCode.OP_SET_LOCAL):
-                stack_entry_index = self.getCurrentStackEntryIndex()
-                value_to_put = self.popStack()
-
-                self.putAtStack(index=stack_entry_index, value=value_to_put)
-
-            elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
-                offset = self.getByte() # get the else condition instruction pointer
-                condition = self.popStack() # pop the condition from stack, the net result of the statement is nullified
-                #condition must be of type BOOLEAN
-                self.assertType(condition, LanguageTypes.BOOLEAN)
-                # the following comparison can be done by directly comparing language constant, but for now we are using python native
-                if condition.value == False:
-                    self.offsetIP(offset)
-
-            elif (current_op_code == OpCode.OP_JMP):
-                offset = self.getByte() # get the else condition instruction pointer
+        elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
+            offset = self.advanceByte() # get the else condition instruction pointer
+            condition = self.popStack() # pop the condition from stack, the net result of the statement is nullified
+            #condition must be of type BOOLEAN
+            self.assertType(condition, LanguageTypes.BOOLEAN)
+            # the following comparison can be done by directly comparing language constant, but for now we are using python native
+            if condition.value == False:
                 self.offsetIP(offset)
 
-            elif (current_op_code == OpCode.OP_CALL):
-                #### modify stack to include ebp ############
-               
-                EBP = MasterData(tipe=LanguageTypes.NUMBER, value=self.getEBP())
-                self.pushStack(EBP)
-                self.setEBP(self.getESP()) # set new value to ebp
-                
-                #############################################
+        elif (current_op_code == OpCode.OP_JMP):
+            offset = self.advanceByte() # get the else condition instruction pointer
+            self.offsetIP(offset)
 
-                function_ip_index = self.getByte() # this returns the index of the function pointer that the ip should point to
-                
-                # actual_ip = self.table[function_ip_index]
+        elif (current_op_code == OpCode.OP_CALL):
+            #### modify stack to include ebp ############
+            # breakpoint()
+            function_object = self.popStack()
+            num_args        = self.popStack()
 
-                self.setIP(ip=function_ip_index)
+            self.assertType(function_object, tipe=LanguageTypes.FUNCTION)
+            self.assertArgumentEquality(function_object, num_args)
 
-            elif (current_op_code == OpCode.OP_SET_EBX):
-                return_value = self.popStack()
-                # self.pushStack(value=return_value)
+            EBP = MasterData(tipe=LanguageTypes.NUMBER, value=self.getEBP())
+            self.pushStack(EBP)
+            self.setEBP(self.getESP()) # set new value to ebp
+            
+            #############################################
 
-                self.setEBX(return_value)
+            function_ip_index = function_object.value.ip # this returns the index of the function pointer that the ip should point to
+            
+            # actual_ip = self.table[function_ip_index]
 
-            elif (current_op_code == OpCode.OP_LOAD_EBX):
-                stack_value = self.getEBX()
-                self.pushStack(value=stack_value)
-                #once read reset it back to NIL
-                self.setEBX(LanguageConstants.NIL)
+            self.setIP(ip=function_ip_index)
 
-            elif (current_op_code == OpCode.OP_RET):
-                # breakpoint()
+        elif (current_op_code == OpCode.OP_SET_EBX):
+            return_value = self.popStack()
+            # self.pushStack(value=return_value)
 
-                relative_index = -2 # ret ptr is -2 offset from the ebp
-                stack_index = relative_index + self.getEBP()
-                return_pointer = self.peekStack(index=stack_index)
-                # print(' return pointer value : ', return_pointer.value)
+            self.setEBX(return_value)
 
-                #here we need to int the returned value since it's being converted from internal NUMBER type which is floating point
-                self.setIP(int(return_pointer.value)) #jump to the caller environment 
+        elif (current_op_code == OpCode.OP_LOAD_EBX):
+            stack_value = self.getEBX()
+            self.pushStack(value=stack_value)
+            #once read reset it back to NIL
+            self.setEBX(LanguageConstants.NIL)
+
+        elif (current_op_code == OpCode.OP_RET):
+            # breakpoint()
+
+            relative_index = -2 # ret ptr is -2 offset from the ebp
+            stack_index = relative_index + self.getEBP()
+            return_pointer = self.peekStack(index=stack_index)
+            # print(' return pointer value : ', return_pointer.value)
+
+            #here we need to int the returned value since it's being converted from internal NUMBER type which is floating point
+            self.setIP(int(return_pointer.value)) #jump to the caller environment 
 # 
-                #on ret we pop all the value of the stack until ebp is equal to esp
-                while self.getEBP() != self.getESP():
-                    # print(self.getEBP(), '-----esp ', self.getESP())
-                    self.popStack()
+            #on ret we pop all the value of the stack until ebp is equal to esp
+            while self.getEBP() != self.getESP():
+                # print(self.getEBP(), '-----esp ', self.getESP())
+                self.popStack()
 
-                EBP = self.popStack()
+            EBP = self.popStack()
 
-                self.setEBP(ebp=EBP.value) # restore previous value to ebp
+            self.setEBP(ebp=EBP.value) # restore previous value to ebp
 
-                # self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
+            # self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
 
-                # self.setEBX(LanguageConstants.NIL)
-
-
-
-            else:
-                self.reportVMError(f"unknown op_code at ip: {self.getIP()}, current_op_code: {current_op_code}")
+            # self.setEBX(LanguageConstants.NIL)
+        else:
+            self.reportVMError(f"unknown op_code at ip: {self.getIP()}, current_op_code: {current_op_code}")
         
         # print('computed ', [str(v) for v in self.stack])
+
+    def run(self, chunk=None, initializing_codes=None, start_at=0):
+
+        if initializing_codes is not None:
+            # initialize the program
+            self.initializeChunk(chunk=initializing_codes)
+            self.run_() 
+
+        if chunk is None:
+            self.reportError(message="main bytearray is not included")
+        
+
+        
+        self.initializeChunk(chunk=chunk)
+        self.setIP(start_at)
+        self.run_()
+    
+    def run_(self):
+        while current_op_code := self.advanceOpCode():
+            self.exec(current_op_code)
+
 
     # calculate the location of stack variable when function frame is entered
     def getCurrentStackEntryIndex(self):
         # breakpoint()
         #abs is done so that, -ve value is not produced when entering block statement, when epb is 0
         # print('ip ', self.ip)
-        # print('stack entry value in byte ', self.getByte(), '  ', self.getEBP(), ' -> ',type(self.getByte()), type(self.getEBP()),", ", ' ip-> ', self.ip)
+        # print('stack entry value in byte ', self.advanceByte(), '  ', self.getEBP(), ' -> ',type(self.advanceByte()), type(self.getEBP()),", ", ' ip-> ', self.ip)
         # ebp = self.getEBP()
-        # relative_stack_index = self.getByte()
+        # relative_stack_index = self.advanceByte()
         # print('stack entry value in byte ', relative_stack_index, '  ', ebp, ' -> ',type(relative_stack_index), type(ebp),", ", ' ip-> ', self.ip)
         # if relative_stack_index > 0: # temp varaible in block are calculated in 
 
@@ -352,7 +379,7 @@ class Vm:
         # print('stack entry index ',absolute_stack_index)
         # return absolute_stack_index
 
-        return self.getEBP() + self.getByte()
+        return self.getEBP() + self.advanceByte()
 
     def setEBP(self, ebp):
         self.ebp = ebp
@@ -368,10 +395,12 @@ class Vm:
     def getESP(self):
         return self.esp
 
-    def getOpCode(self):
+    def advanceOpCode(self):
+        # breakpoint()
         if (not self.isAtEnd()):
             ret_value = self.chunk.codeAt(self.getIP())
             self.advance()
+            # breakpoint()
             return ret_value
         # breakpoint()
         return None
@@ -391,11 +420,14 @@ class Vm:
     def advance(self):
         self.setIP(ip=self.getIP() + 1)
 
-    def getByte(self):
-        return self.getOpCode()
+    def advanceByte(self):
+
+        return_byte = self.advanceOpCode()
+        return return_byte
 
     def loadConstant(self):
-        index = self.getByte()
+        index = self.advanceByte()
+        # breakpoint()
         return self.chunk.constantAt(index)
 
     def popStack(self):
