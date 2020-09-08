@@ -15,6 +15,12 @@ class Vm:
 
         self.table = {} #storing reference to
 
+        if self.chunk is not None:
+            self.code_length = len(self.chunk.codes)
+        else:
+            self.code_length = 0
+
+
     def reportVMError(self, message):
         raise Exception(f"VM ERROR\n{message}\nAt line: {self.getCurrentInstructionLine()}")
 
@@ -40,7 +46,7 @@ class Vm:
     def run(self, chunk=None, start_at=0):
        
         if chunk is not None:
-            self.chunk = chunk
+            self.__init__(chunk=chunk)
             self.setIP(start_at)
 
         while current_op_code := self.getOpCode():
@@ -380,7 +386,7 @@ class Vm:
         return self.ip
 
     def isAtEnd(self):
-        return self.getIP() >= len(self.chunk.codes)
+        return self.getIP() >= self.code_length
 
     def advance(self):
         self.setIP(ip=self.getIP() + 1)
