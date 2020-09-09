@@ -110,6 +110,8 @@ class Lox:
         import time
         a = time.time()
         vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = entry_point)
+        
+        print("########################################################################")
         print('time ', time.time() -a)
 
 #run the program by calling the static function main of the interpreter

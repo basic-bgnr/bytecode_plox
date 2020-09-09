@@ -1,11 +1,12 @@
 from enum import Enum, auto
 
 class LanguageTypes(Enum):
-	NUMBER = auto(),
-	BOOLEAN = auto(),
-	NULL = auto()
-	STRING = auto(),
-	FUNCTION = auto(),
+	NUMBER          = auto(),
+	BOOLEAN         = auto(),
+	NULL            = auto()
+	STRING          = auto(),
+	FUNCTION        = auto(),
+	NATIVE_FUNCTION = auto(),
 
 class MasterData:
 	def __init__(self, tipe, value):
@@ -15,7 +16,7 @@ class MasterData:
 	def __str__(self):
 		if self.tipe == LanguageTypes.STRING:
 			return f'"{self.value}"'
-		if self.tipe == LanguageTypes.FUNCTION:
+		if self.tipe in [LanguageTypes.FUNCTION, LanguageTypes.NATIVE_FUNCTION]:
 			return f"<{self.tipe.name} {self.value}>"
 
 		return f"{self.value}"
@@ -35,6 +36,23 @@ class FunctionObject:
 		self.name = name 
 		self.arity = arity
 		self.ip = ip  
+
+	def __str__(self):
+		return f"{self.name}"
+
+class NativeFunctionObject:
+	def __init__(self, name, arity, ip=None):
+		self.name = name 
+		self.arity = arity
+
+		self.ip = ip
+		self.function = None
+
+	def setFunction(self, function):
+		self.function = function 
+
+	def call(self, *args):
+		return self.function(*args)
 
 	def __str__(self):
 		return f"{self.name}"

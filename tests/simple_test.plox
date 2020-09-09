@@ -306,23 +306,23 @@
 # main();
 
 
-fun fib(n){
-	if n < 2 {
-		return 1;
-	}else{
-		return fib(n-2) + fib(n-1);
-	};
-};
+# fun fib(n){
+# 	if n < 2 {
+# 		return 1;
+# 	}else{
+# 		return fib(n-2) + fib(n-1);
+# 	};
+# };
 
-fun main(){
+# fun main(){
 
-	var limit = 10;
-	for(var i = 0; i < limit; i += 1) {
-		print (fib(i));
-	};
-};
+# 	var limit = 10;
+# 	for(var i = 0; i < limit; i += 1) {
+# 		print (fib(i));
+# 	};
+# };
 
-main();
+# main();
 
 # main();
 # fun modifyString(str, format){
@@ -351,3 +351,48 @@ main();
 # };
 
 # main(100);
+
+
+# fun main(){	
+# 	var t1 = time();
+
+# 	# var a = 100.234234;
+# 	# print "the value of a is " + str(int(a));
+# 	var limit = 100;
+
+# 	for(var i = 1; i <= limit; i+=1 ){
+# 		print str(i) + ".   " + str(random());
+# 	};
+	
+
+# 	var t2 = time();
+
+# 	# print "Time to generate " +str(limit) + " random number is " + str(t2-t1);
+# 	print str(int(t2-t1));
+
+# 	print type(str(t2));
+# };
+
+# main();
+
+
+fun sleep(time_sec) {
+	var begin = time();
+
+	time_sec = time_sec * 1000_000_000;
+	while time() - begin < time_sec {
+
+	};
+};
+
+
+fun main(){
+	var sleep_time = 5;
+	print "sleeping for " + str(sleep_time) + " seconds..... ";
+	sleep(sleep_time);
+	print "now awake";
+
+	print "type of " + type(sleep_time);
+};
+
+main();

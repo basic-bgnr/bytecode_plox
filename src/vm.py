@@ -1,14 +1,47 @@
 from opcodes import OpCode
-from values import MasterData, LanguageTypes
+from values import MasterData, LanguageTypes, FunctionObject, NativeFunctionObject
 import LanguageConstants
+
+from enum import Enum
+
+###for native functionality only 
+import time
+import random 
 #Note: The vm's ip counter always points at the next instruction to execute
 class Vm:
     def __init__(self, chunk=None):
         self.initializeChunk(chunk=chunk)
+        self.initializeVm()
 
-        self.table = {} #the reason this is only initialized once is due to the fact that initialization code pupulates it which is further utilized byt the program.
+    def initializeVm(self):
+        #self.table = {} #the reason this is only initialized once is due to the fact that initialization code pupulates it which is further utilized byt the program.
 
-       
+        INT_FUNCTION_IDENTIFIER = NativeFunctions.INT.value[0]
+        INT_FUNCTION = NativeFunctionObject(name=INT_FUNCTION_IDENTIFIER, arity=1)
+        INT_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.NUMBER, value=int(x.value)))
+
+        STR_FUNCTION_IDENTIFIER = NativeFunctions.STR.value[0]
+        STR_FUNCTION = NativeFunctionObject(name=STR_FUNCTION_IDENTIFIER, arity=1)
+        STR_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.STRING, value=str(x.value)))
+
+        TIME_FUNCTION_IDENTIFIER = NativeFunctions.TIME.value[0]
+        TIME_FUNCTION = NativeFunctionObject(name=TIME_FUNCTION_IDENTIFIER, arity=0)
+        TIME_FUNCTION.setFunction(lambda: MasterData(tipe=LanguageTypes.NUMBER, value=time.time_ns()))
+
+        RANDOM_FUNCTION_IDENTIFIER = NativeFunctions.RANDOM.value[0]
+        RANDOM_FUNCTION = NativeFunctionObject(name=RANDOM_FUNCTION_IDENTIFIER, arity=0)
+        RANDOM_FUNCTION.setFunction(lambda: MasterData(tipe=LanguageTypes.NUMBER, value=random.random()))
+
+        TYPE_FUNCTION_IDENTIFIER = NativeFunctions.TYPE.value[0]
+        TYPE_FUNCTION = NativeFunctionObject(name=TYPE_FUNCTION_IDENTIFIER, arity=1)
+        TYPE_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.STRING, value= f"<{x.tipe.name}>"))
+
+
+        self.table = { INT_FUNCTION_IDENTIFIER:    MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=INT_FUNCTION),
+                       STR_FUNCTION_IDENTIFIER:    MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=STR_FUNCTION),
+                       TIME_FUNCTION_IDENTIFIER:   MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=TIME_FUNCTION),
+                       RANDOM_FUNCTION_IDENTIFIER: MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=RANDOM_FUNCTION),
+                       TYPE_FUNCTION_IDENTIFIER:   MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=TYPE_FUNCTION), }
 
     def initializeChunk(self, chunk=None):
         self.chunk = chunk
@@ -286,20 +319,41 @@ class Vm:
             function_object = self.popStack()
             num_args        = self.popStack()
 
-            self.assertType(function_object, tipe=LanguageTypes.FUNCTION)
+            self.assertOptionalTypes(function_object, LanguageTypes.FUNCTION, LanguageTypes.NATIVE_FUNCTION)
             self.assertArgumentEquality(function_object, num_args)
+
 
             EBP = MasterData(tipe=LanguageTypes.NUMBER, value=self.getEBP())
             self.pushStack(EBP)
             self.setEBP(self.getESP()) # set new value to ebp
             
             #############################################
+            #in case of native function, new ip is not set however all equivalent procedures are carried out to simulate function call
+            #the following if branch simulates function call, and return
+            if function_object.tipe == LanguageTypes.NATIVE_FUNCTION:
+                # breakpoint()
+                
+                custom_function = function_object.value
+                #int(num_args_value) is required because its floating point by default
+                args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
 
-            function_ip_index = function_object.value.ip # this returns the index of the function pointer that the ip should point to
-            
-            # actual_ip = self.table[function_ip_index]
+                try:                
+                    return_value = custom_function.call(*args) #
+                except Exception as e:
+                    self.reportError(message=f"{e.args[0]}")
 
-            self.setIP(ip=function_ip_index)
+                self.pushStack(return_value) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
+                self.setEBX(return_value)
+
+                self.stackCleanup()
+                
+
+            else:
+                function_ip_index = function_object.value.ip # this returns the index of the function pointer that the ip should point to
+                
+                # actual_ip = self.table[function_ip_index]
+
+                self.setIP(ip=function_ip_index)
 
         elif (current_op_code == OpCode.OP_SET_EBX):
             return_value = self.popStack()
@@ -322,20 +376,9 @@ class Vm:
             # print(' return pointer value : ', return_pointer.value)
 
             #here we need to int the returned value since it's being converted from internal NUMBER type which is floating point
-            self.setIP(int(return_pointer.value)) #jump to the caller environment 
-# 
-            #on ret we pop all the value of the stack until ebp is equal to esp
-            while self.getEBP() != self.getESP():
-                # print(self.getEBP(), '-----esp ', self.getESP())
-                self.popStack()
+            self.setIP(int(return_pointer.value)) #seth the callee environment
+            self.stackCleanup() #cleanup temporaries value in created in the function frame
 
-            EBP = self.popStack()
-
-            self.setEBP(ebp=EBP.value) # restore previous value to ebp
-
-            # self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
-
-            # self.setEBX(LanguageConstants.NIL)
         else:
             self.reportVMError(f"unknown op_code at ip: {self.getIP()}, current_op_code: {current_op_code}")
         
@@ -356,7 +399,21 @@ class Vm:
         self.initializeChunk(chunk=chunk)
         self.setIP(start_at)
         self.run_()
-    
+
+    def stackCleanup(self):
+     #on ret we pop all the value of the stack until ebp is equal to esp
+        while self.getEBP() != self.getESP():
+            # print(self.getEBP(), '-----esp ', self.getESP())
+            self.popStack()
+
+        EBP = self.popStack()
+
+        self.setEBP(ebp=EBP.value) # restore previous value to ebp
+
+        # self.pushStack(self.getEBX()) # push the ebx value in the stack stack, it is done because the function must change the stack as it's evaluated as expression
+
+        # self.setEBX(LanguageConstants.NIL)
+
     def run_(self):
         while current_op_code := self.advanceOpCode():
             self.exec(current_op_code)
@@ -455,6 +512,7 @@ class Vm:
         return self.chunk.lineAt(self.getIP()-1) #ip is already advance before the instruction is run 
 
     def getFromTable(self, key):
+        # breakpoint()
         try:
             return self.table[key]
         except KeyError as e:
@@ -472,3 +530,10 @@ class Vm:
 
     def getEBX(self):
         return self.ebx
+
+class NativeFunctions(Enum):
+    INT    = 'int',
+    STR    = 'str',
+    TIME   = 'time',
+    RANDOM = 'random',
+    TYPE   = 'type',
