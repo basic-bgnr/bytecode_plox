@@ -6,6 +6,8 @@ import LanguageConstants
 
 from itertools import count
 
+from ASTPrinter import ASTPrinter
+
 #helper class to manage local variable in program stack
 class ScopeEntity:
     def __init__(self, name, scope_depth, index = None):
@@ -17,6 +19,13 @@ class ScopeEntity:
     def __str__(self):
         return f"<ScopeEntity : name: {self.name:}, scope_depth: {self.scope_depth}, scope_index: {self.index}>"
 
+class LoopModifierEntity:
+    def __init__(self, parent_loop_scope_depth, instruction_pointer_location):
+        self.parent_loop_scope_depth = parent_loop_scope_depth
+        self.instruction_pointer_location = instruction_pointer_location
+
+    def __str__(self):
+        return f"parent_scope_depth: {self.parent_loop_scope_depth}   instruction_pointer_location: {self.instruction_pointer_location}"
         
 
 class Compiler:
@@ -35,6 +44,41 @@ class Compiler:
 
         self.initializing_codes.linkConstantPoolWithParent(parent=self.chunk)
 
+        self.break_modifier_entities = []
+        self.continue_modifier_entities = []
+    ###########################################################################
+
+    def peekBreakEntityAt(self):
+        for entity in reversed(self.break_modifier_entities):
+            if entity.parent_loop_scope_depth == scope_depth:
+                return entity
+
+
+    def peekContinueEntityAt(self, scope_depth):
+        for entity in reversed(self.continue_modifier_entities):
+            if entity.parent_loop_scope_depth == scope_depth:
+                return entity
+
+
+    def peekContinueEntity(self):
+        return self.continue_modifier_entities[-1]
+
+    def peekBreakEntity(self):
+        return self.break_modifier_entities[-1]
+
+    def popBreakEntity(self):
+        return self.break_modifier_entities.pop()
+
+    def popContinueEntity(self):
+        return self.continue_modifier_entities.pop()
+
+    def pushBreakEntity(self, break_entity):
+        self.break_modifier_entities.append(break_entity)
+
+    def pushContinueEntity(self, continue_entity):
+        self.continue_modifier_entities.append(continue_entity)
+
+    ###########################################################################
     def reportCompilerError(self, message):
         raise Exception(f"COMPILER ERROR\n{message}")
 
@@ -64,6 +108,7 @@ class Compiler:
         return self.scope_depth
 
     def advanceScopeDepth(self):
+        # breakpoint()
         return self.setScopeDepth(self.getscopeDepth() + 1)
 
     def reverseScopeDepth(self):
@@ -112,8 +157,8 @@ class Compiler:
 
 
     def compile(self, AS):
-        # if AS is not None:
-        return AS.linkVisitor(self)
+        if AS is not None:
+            return AS.linkVisitor(self)
 
     def makeConstant(self, constant):
         return self.chunk.makeConstant(constant)
@@ -270,12 +315,12 @@ class Compiler:
             return line_num
 
     def visitBlockStatement(self, block_statement):
+        # breakpoint()
         self.beginScope()
         line_num = 0
         for statement in block_statement.statements:
             line_num = self.compile(statement)
 
-        # breakpoint()
         self.endScope(line_num)
 
         
@@ -401,6 +446,50 @@ class Compiler:
         
         self.emitCode(op_code=OpCode.OP_RET, at_line=line_num)
         return line_num
+
+    def visitContinueStatement(self, continue_statement):
+        line_num = continue_statement.token.line
+        
+        
+        goto_entity = self.peekContinueEntity()
+        # breakpoint()
+        #cleanup temporary stack
+        for scope_entity in reversed(self.scope_entities):
+            if goto_entity.parent_loop_scope_depth < scope_entity.scope_depth:
+                self.emitCode(op_code=OpCode.OP_POP, at_line=line_num)
+            else:
+                break
+
+        self.emitCode(op_code=OpCode.OP_GOTO, at_line=line_num)
+        goto_ip_location = self.getNextIPLocation()
+        self.emitByte(byte=goto_entity.instruction_pointer_location, at_line=line_num) #this byte will get modified later on 
+        goto_entity.instruction_pointer_location = goto_ip_location
+        
+        # breakpoint()
+
+        return line_num
+
+    def visitBreakStatement(self, break_statement):
+        line_num = break_statement.token.line
+        # breakpoint()
+    
+        goto_entity = self.peekBreakEntity()
+        #cleanup temporary stack
+        for scope_entity in reversed(self.scope_entities):
+            if goto_entity.parent_loop_scope_depth < scope_entity.scope_depth:
+                self.emitCode(op_code=OpCode.OP_POP, at_line=line_num)
+            else:
+                break
+
+        self.emitCode(op_code=OpCode.OP_GOTO, at_line=line_num)
+        goto_ip_location = self.getNextIPLocation()
+        self.emitByte(byte=goto_entity.instruction_pointer_location, at_line=line_num)
+        goto_entity.instruction_pointer_location = goto_ip_location
+
+        # breakpoint()
+        
+        return line_num
+
 
 
     def visitFunctionStatement(self, function_statement):
@@ -579,7 +668,13 @@ class Compiler:
             return else_line_num
 
     def visitWhileStatement(self, while_statement):
+
+        self.pushBreakEntity(break_entity=LoopModifierEntity(parent_loop_scope_depth=self.getscopeDepth(), instruction_pointer_location=None))#we don't know the ip location now
+        self.pushContinueEntity(continue_entity=LoopModifierEntity(parent_loop_scope_depth=self.getscopeDepth(), instruction_pointer_location=None))#we don't know the ip location now
+
         top_label_instruction_pointer = self.getInstructionPointerSize() # this points to below expression
+
+
         line_num = self.compile(while_statement.expression) # put the condition expression in the stack
 
         self.emitCodes(OpCode.OP_JMP_IF_FALSE, None, at_line=line_num) #put random byte at the jump location
@@ -588,14 +683,50 @@ class Compiler:
         #compile loop code 
 
         loop_line_num = self.compile(while_statement.block_statement)
+       
+        ###########
+        self.modifyContinueInstructionPointer() #starts continue from here, reason for while statement to have additonal end_block_statement
+        ###########
+        
+        loop_line_num = self.compile(while_statement.end_block_statement)
+
+
         branch_if_end_instruction_pointer = self.getInstructionPointerSize() + 1 + 1 # this points to the following op_jmp, but we need to add one since loop ofset variable is also in the code stack and an additional 1 so that the ip_counter point next to it.
 
         loop_offset = top_label_instruction_pointer - branch_if_end_instruction_pointer  # this is negative, as we need to go upward
         self.emitCodes(OpCode.OP_JMP, loop_offset, at_line=loop_line_num) # this loops to the start o the top_level_counter
         
         false_condition_instruction_pointer = self.getInstructionPointerSize() - 1 #this points to the instruction after the above OP_JMP
+
+        self.modifyBreakInstructionPointer()#starts break from here
+
         false_offset = false_condition_instruction_pointer - branch_if_start_instruction_pointer
         self.modifyByteAt(byte=false_offset, index=branch_if_start_instruction_pointer)
 
+        # breakpoint()
+
+
+        #pop it after we've compiled all the block statements
+        self.popContinueEntity()
+        self.popBreakEntity()
+
+
+        return line_num
+
+
+    def modifyContinueInstructionPointer(self):
+        #check if continue statement is defined in the block_statment
+        continue_entity = self.peekContinueEntity()
+        if index := continue_entity.instruction_pointer_location:
+            modified_ip = self.getInstructionPointerSize()
+            self.modifyByteAt(byte=modified_ip, index=index)
+
+
+    def modifyBreakInstructionPointer(self):
+    #check if break statement is defined in the block_statment
+        break_entity = self.peekBreakEntity()
+        if index := break_entity.instruction_pointer_location:
+            modified_ip = self.getInstructionPointerSize()
+            self.modifyByteAt(byte=modified_ip, index=index)
 
 

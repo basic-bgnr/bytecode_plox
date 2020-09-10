@@ -313,6 +313,10 @@ class Vm:
             offset = self.advanceByte() # get the else condition instruction pointer
             self.offsetIP(offset)
 
+        elif(current_op_code == OpCode.OP_GOTO):
+            goto_location  = self.advanceByte()
+            self.setIP(ip=goto_location)
+
         elif (current_op_code == OpCode.OP_CALL):
             #### modify stack to include ebp ############
             # breakpoint()

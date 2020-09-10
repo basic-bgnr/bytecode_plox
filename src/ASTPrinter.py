@@ -23,6 +23,11 @@ class ASTPrinter:
         ret_val = f"{return_statement.name} {self.print(return_statement.expr)}"
         return ret_val
 
+    def visitContinueStatement(self, continue_statement):
+        return continue_statement.name 
+    def visitBreakStatement(self, break_statement):
+        return break_statement.name
+
     def visitFunctionStatement(self, function_statement):
         # print(f'insid printer->  {function_statement.params_list}')
         ret_val = "<func> " + self.print(function_statement.function_identifier_expression)
@@ -33,6 +38,8 @@ class ASTPrinter:
     def visitWhileStatement(self, while_statement):
         ret_val = while_statement.name + ' ' + self.print(while_statement.expression) + '\n'
         ret_val += self.print(while_statement.block_statement)
+        if end_block := while_statement.end_block_statement:
+            ret_val += f"<whileendblock {self.print(end_block)}>"
         return ret_val
 
     def visitIfStatement(self, if_statement):

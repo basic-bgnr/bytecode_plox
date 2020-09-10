@@ -35,7 +35,8 @@ class Disassembler:
                                      OpCode.OP_JMP_IF_FALSE,
                                      OpCode.OP_JMP,
                                      #OpCode.OP_CALL,
-                                     OpCode.OP_PUSH]
+                                     OpCode.OP_PUSH,
+                                     OpCode.OP_GOTO]
                          
         ###############################################
         op_codes_stack  = [OpCode.OP_LOAD_LOCAL,
@@ -43,12 +44,14 @@ class Disassembler:
                            OpCode.OP_JMP_IF_FALSE,
                            OpCode.OP_JMP,
                            #OpCode.OP_CALL,
-                           OpCode.OP_PUSH]
+                           OpCode.OP_PUSH,
+                           OpCode.OP_GOTO]
 
         op_codes_global = [OpCode.OP_LOAD_CONSTANT, 
-                             OpCode.OP_DEFINE_GLOBAL,
-                             OpCode.OP_LOAD_GLOBAL,
-                             OpCode.OP_REDEFINE_GLOBAL]
+                         OpCode.OP_DEFINE_GLOBAL,
+                         OpCode.OP_LOAD_GLOBAL,
+                         OpCode.OP_REDEFINE_GLOBAL,
+                         ]
 
         ###############################################
         # list(map(lambda x: print(x), [str(c) for c in self.chunk.codes]))

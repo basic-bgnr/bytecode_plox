@@ -38,10 +38,27 @@ class ReturnStatement:
     def linkVisitor(self, visitor):
         return visitor.visitReturnStatement(self)
 
+class ContinueStatement:
+    def __init__(self, token):
+        self.token = token
+        self.name = f"<continue>"
+
+    def linkVisitor(self, visitor):
+        return visitor.visitContinueStatement(self)
+
+class BreakStatement:
+    def __init__(self, token):
+        self.token = token
+        self.name = f"<break>"
+    def linkVisitor(self, visitor):
+        return visitor.visitBreakStatement(self)
+
+
 class WhileStatement:
-    def __init__(self, expression, block_statement):
+    def __init__(self, expression, block_statement, end_block_statement=None):
         self.expression = expression
         self.block_statement = block_statement
+        self.end_block_statement = end_block_statement
         self.name = f"<while>"
 
     def linkVisitor(self, visitor):
@@ -239,6 +256,12 @@ class Parser:
 
         if (class_statement := self.classStatement()):
             return class_statement
+
+        if (continue_statement := self.continueStatement()):
+            return continue_statement
+
+        if (break_statement := self.breakStatement()):
+            return break_statement
         
         #here order is important, expression statement must come at last 
         #expressiontStatement returns ReassignmentStatement as well as Expression statement, it is due to the way the parsing is performed
@@ -252,6 +275,16 @@ class Parser:
 
 
             
+    def continueStatement(self):
+        if(self.peek().tipe == TokenType.CONTINUE):
+            token = self.advance()
+            return ContinueStatement(token=token)
+
+    def breakStatement(self):
+        if(self.peek().tipe == TokenType.BREAK):
+            token = self.advance()
+            return BreakStatement(token=token)
+
 
     def classStatement(self):
         # print('in class statement')
@@ -571,7 +604,7 @@ class Parser:
 
             self.advance() # consume the `(`
             
-            initializer = self.parseStatement()
+            initializer_statement = self.parseStatement()
             if (self.peek().tipe != TokenType.SEMICOLON):
                 raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
             self.advance() # consume the semicolon
@@ -584,21 +617,21 @@ class Parser:
                 raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
             self.advance() # consume the semicolon
             
-            increment = self.parseStatement() # optional so doesn't raised exception
+            increment_statement = self.parseStatement() # optional so doesn't raised exception
             if (self.peek().tipe != TokenType.RIGHT_PAREN):
                 raise Exception(f"no matching parenthesis in for statement at line {self.peek().line}")
             self.advance() # consume the right paren
 
             block_statement = self.blockStatement()
-            if increment is not None:
-                block_statement.statements.append(increment) # direct AST manipulation must be explicitly checked for None type
+            # if increment_statement is not None:
+                # block_statement.statements.append(increment_statement) # direct AST manipulation must be explicitly checked for None type
 
-            while_statement = WhileStatement(condition, block_statement)
+            while_statement = WhileStatement(condition, block_statement, increment_statement)
 
             
-            # add the initializer before the body of the while statement, at the top
-            if initializer is not None: # direct AST manipulation must be explicitly checked for None type
-                self.getCurrentAST().append(initializer) 
+            # add the initializer_statement before the body of the while statement, at the top
+            if initializer_statement is not None: # direct AST manipulation must be explicitly checked for None type
+                self.getCurrentAST().append(initializer_statement) 
 
             return while_statement
 #         else:

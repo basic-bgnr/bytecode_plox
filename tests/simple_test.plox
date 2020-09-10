@@ -376,23 +376,76 @@
 # main();
 
 
-fun sleep(time_sec) {
-	var begin = time();
+# fun sleep(time_sec) {
+# 	var begin = time();
 
-	time_sec = time_sec * 1000_000_000;
-	while time() - begin < time_sec {
+# 	time_sec = time_sec * 1000_000_000;
+# 	while time() - begin < time_sec {
 
+# 	};
+# };
+
+
+# fun main(){
+# 	var sleep_time = 5;
+# 	print "sleeping for " + str(sleep_time) + " seconds..... ";
+# 	sleep(sleep_time);
+# 	print "now awake";
+
+# 	print "type of " + type(sleep_time);
+# };
+
+# main();
+
+fun main(){
+	var limit = 10;
+	while limit > 0 {
+		limit -= 1;
+		var counter = 0;
+		while counter < limit {
+			counter += 1;
+			if counter == 2 {
+				var random = 234234;
+				var ran3 =34234;
+				{};
+				continue;
+
+			};
+			if counter == 4 {
+				break;
+			};
+			
+			print "counter " + str(counter);
+		};
+		if limit == 2 {
+			continue;
+		};
+		print "number is " + str(limit);
 	};
 };
 
-
-fun main(){
-	var sleep_time = 5;
-	print "sleeping for " + str(sleep_time) + " seconds..... ";
-	sleep(sleep_time);
-	print "now awake";
-
-	print "type of " + type(sleep_time);
-};
-
 main();
+
+# fun main(){
+# 	var limit = 10;
+# 	for(var i = 0; i<=limit; {i+=1; print "always";}){
+# 		if i == 3 {
+# 			continue;			
+# 		};
+# 		if i == 7{
+# 			for (var j = 100; i<=110; {j += 1; break;}){
+				
+# 				if j == 105 {
+# 					break;
+# 				};
+# 				if j == 102 {
+# 					continue;
+# 				};
+# 				print "j " + str(j);
+# 			};
+# 		};
+# 		print i;
+# 	};
+# };
+
+# main();

@@ -43,3 +43,5 @@ class OpCode(Enum):
 
 	OP_SET_EBX = auto(),
 	OP_LOAD_EBX = auto(),
+
+	OP_GOTO =auto(),

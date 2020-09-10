@@ -175,6 +175,8 @@ class Scanner:
 																					TokenType.MATCH,
 																					TokenType.CASE,
 																					TokenType.DEFAULT,
+																					TokenType.BREAK,
+																					TokenType.CONTINUE,
 																					]})
 
 			literal = self.getLiteral()
@@ -309,6 +311,8 @@ class TokenType(Enum):
   MATCH = 'match'
   CASE = 'case'
   DEFAULT = 'default'
+  CONTINUE = 'continue'
+  BREAK = 'break'
 
 
 
