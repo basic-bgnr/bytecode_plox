@@ -55,7 +55,7 @@ class Lox:
             print(Lox.prompt_signature, end=' ')
             try:
                 input_source = input()
-                Lox.run(f"{input_source};", vm)
+                Lox.run(input_source, vm)
             except Exception as e: 
                 print(f"{e}")
 
@@ -64,7 +64,7 @@ class Lox:
         while True:
             print(Lox.prompt_signature, end=' ')
             input_source = input()
-            Lox.debugRun(f"{input_source};", vm)
+            Lox.debugRun(input_source, vm)
             
     @staticmethod
     def run(source_code, vm):

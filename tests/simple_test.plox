@@ -397,34 +397,34 @@
 
 # main();
 
-fun main(){
-	var limit = 10;
-	while limit > 0 {
-		limit -= 1;
-		var counter = 0;
-		while counter < limit {
-			counter += 1;
-			if counter == 2 {
-				var random = 234234;
-				var ran3 =34234;
-				{};
-				continue;
-
-			};
-			if counter == 4 {
-				break;
-			};
-			
-			print "counter " + str(counter);
-		};
-		if limit == 2 {
-			continue;
-		};
-		print "number is " + str(limit);
-	};
-};
-
-main();
+#fun main(){
+#	var limit = 10;
+#	while limit > 0 {
+#		limit -= 1;
+#		var counter = 0;
+#		while counter < limit {
+#			counter += 1;
+#			if counter == 2 {
+#				var random = 234234;
+#				var ran3 =34234;
+#				{};
+#				continue;
+#
+#			};
+#			if counter == 4 {
+#				break;
+#			};
+#			
+#			print "counter " + str(counter);
+#		};
+#		if limit == 2 {
+#			continue;
+#		};
+#		print "number is " + str(limit);
+#	};
+#};
+#
+#main();
 
 # fun main(){
 # 	var limit = 10;
@@ -449,3 +449,9 @@ main();
 # };
 
 # main();
+
+fun main() {
+  print type(true);
+};
+
+main();
