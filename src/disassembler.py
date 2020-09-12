@@ -82,7 +82,7 @@ class Disassembler:
     def stringifyConstantPool(header, constant_pool):
         output_string = [f"{header:^50}"]
         for index, constant in enumerate(constant_pool):
-            output_string.append(f"{index}. {constant}")
+            output_string.append(f"{index:>04}. {constant   }")
         return output_string
 
 

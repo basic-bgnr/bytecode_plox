@@ -450,8 +450,65 @@
 
 # main();
 
-fun main() {
-  print type(true);
+# fun main() {
+#   print type(true);
+# };
+
+# main();
+
+fun fib(n){
+	match n {
+		case <=2 => return 1
+		case default => return this(n-1) + this(n-2)
+	};
+	
 };
+
+class TestClass{
+	fun TestClass(){
+
+	};
+	fun printHello(){
+		print "hello world ! from TestClass";
+	};
+
+	fun prettify(str1){
+		print "prettify " + str(this);
+		return "!!!!# " + str1 + " #!!!";
+	};
+
+	fun fib(n){
+		match n{
+			case <2        => return 1
+			case default   => return this.fib(n-1) + this.fib(n-2)
+		};
+	};
+
+};
+
+fun main() {
+	# var c = TestClass;
+	# print "the class is " + str(c);
+	# print "type of class is " + type(c);
+
+
+	var d = TestClass();
+
+	d.printHello();
+
+	print d.prettify("hieeee");
+
+	for(var i=0; i<=10; i+=1){
+
+		print d.fib(i);
+	};
+
+	print this;
+
+	print fib(10);
+
+
+};
+
 
 main();

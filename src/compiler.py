@@ -1,12 +1,14 @@
 from ByteArray import Chunk
 from opcodes import OpCode
 from lexer import TokenType
-from values import LanguageTypes, MasterData, FunctionObject
+from values import LanguageTypes, MasterData, FunctionObject, ClassObj, InstanceObj
 import LanguageConstants
 
 from itertools import count
 
 from ASTPrinter import ASTPrinter
+from parser import LiteralExpression, GetExpression
+
 
 #helper class to manage local variable in program stack
 class ScopeEntity:
@@ -46,7 +48,14 @@ class Compiler:
 
         self.break_modifier_entities = []
         self.continue_modifier_entities = []
+
+        self.is_inside_class = False 
     ###########################################################################
+    def setInsideClass(self, value):
+        self.is_inside_class = value
+
+    def isInsideClass(self):
+        return self.is_inside_class
 
     def peekBreakEntityAt(self):
         for entity in reversed(self.break_modifier_entities):
@@ -203,7 +212,7 @@ class Compiler:
             self.pushConstant(string, at_line = literal_expression.expr.line)
 
         ##todo: identifier_token implementation 
-        elif (literal_expression.expr.tipe is TokenType.IDENTIFIER):
+        elif (literal_expression.expr.tipe in [TokenType.IDENTIFIER, TokenType.THIS]):
             
             local_variable_index = self.resolveLocalVariable(literal_expression.expr.literal)
             if (local_variable_index is not None):
@@ -497,23 +506,24 @@ class Compiler:
         
         ip = self.getNextIPLocation()
         ##############################################################################
+        if not self.isInsideClass(): #only global function are callable by names
 
-        function_name = function_statement.function_identifier_expression.expr.literal
-        params_length = len(function_statement.params_list)
+            function_name = function_statement.function_identifier_expression.expr.literal
+            params_length = len(function_statement.params_list)
 
-        function_constant = MasterData(tipe=LanguageTypes.FUNCTION, value=FunctionObject(name=function_name, arity=params_length, ip=ip))
-        function_index = self.makeConstant(constant=function_constant)
+            function_constant = MasterData(tipe=LanguageTypes.FUNCTION, value=FunctionObject(name=function_name, arity=params_length, ip=ip))
+            function_index = self.makeConstant(constant=function_constant)
 
-        #this is for use in the vm for indexing function table 
-        function_name_constant = MasterData(tipe=LanguageTypes.STRING, value=function_name)
-        function_name_constant_index = self.makeConstant(constant=function_name_constant)
+            #this is for use in the vm for indexing function table 
+            function_name_constant = MasterData(tipe=LanguageTypes.STRING, value=function_name)
+            function_name_constant_index = self.makeConstant(constant=function_name_constant)
 
-        ##insert these statement at the beginning of the program so that function can be called at runtime instead at compiletime
-        self.addInitializingCode(OpCode.OP_LOAD_CONSTANT, line_num=0)
-        self.addInitializingCode(function_index, line_num=0)
+            ##insert these statement at the beginning of the program so that function can be called at runtime instead at compiletime
+            self.addInitializingCode(OpCode.OP_LOAD_CONSTANT, line_num=0)
+            self.addInitializingCode(function_index, line_num=0)
 
-        self.addInitializingCode(OpCode.OP_DEFINE_GLOBAL, line_num=0)
-        self.addInitializingCode(function_name_constant_index, line_num=0)
+            self.addInitializingCode(OpCode.OP_DEFINE_GLOBAL, line_num=0)
+            self.addInitializingCode(function_name_constant_index, line_num=0)
 
         ###################################################
         self.beginScope()
@@ -563,7 +573,13 @@ class Compiler:
         for arg in function_expression.args:
             line_num = self.compile(arg) # push the args in the stack
         else:#if no arg is supplied
-            line_num = function_expression.caller_expr.expr.line
+            if isinstance(function_expression.caller_expr,GetExpression):
+                line_num = function_expression.caller_expr.expr.expr.line #get expression
+                function_name = function_expression.caller_expr.expr.expr.literal
+
+            if isinstance(function_expression.caller_expr, LiteralExpression):
+                line_num = function_expression.caller_expr.expr.line #literal expression
+                function_name = function_expression.caller_expr.expr.literal
 
         #return pointer address, make the pointer address constant and load it using OP_CONSTANT
         
@@ -576,7 +592,7 @@ class Compiler:
         self.compile(function_expression.caller_expr) #load the function object in the stack
 
         self.emitCode(OpCode.OP_CALL, at_line=line_num)
-        function_name = function_expression.caller_expr.expr.literal
+        
         #byte can also be made cosntant, OP_CONSTANT
 
         # self.emitByte(byte=self.getFunctionPointer(function_name), at_line=line_num)
@@ -729,4 +745,68 @@ class Compiler:
             modified_ip = self.getInstructionPointerSize()
             self.modifyByteAt(byte=modified_ip, index=index)
 
+    def visitGetExpression(self, get_expression):
+        expr = get_expression.expr 
+        prop_or_method_token = get_expression.prop_or_method
 
+        #emit code that load the name in the stack
+        self.pushConstant(MasterData(tipe=LanguageTypes.STRING, value=prop_or_method_token.literal), at_line=prop_or_method_token.line)
+        line_num = self.compile(expr)#load it into stack 
+
+        self.emitCode(op_code=OpCode.OP_GET_PROPERTY, at_line=line_num)
+
+
+
+    def visitClassStatement(self, class_statement):
+
+        class_identifier_expression = class_statement.class_identifier_expression
+        function_statements = class_statement.function_statements
+        variable_statements = class_statement.variable_statements
+        ##############################################################################
+
+        class_name = class_identifier_expression.expr.literal
+
+        class_constant = MasterData(tipe=LanguageTypes.CLASS, value=ClassObj(name=class_name))
+        class_index = self.makeConstant(constant=class_constant)
+
+        #this is for use in the vm for indexing function table 
+        class_name_constant = MasterData(tipe=LanguageTypes.STRING, value=class_name)
+        class_name_constant_index = self.makeConstant(constant=class_name_constant)
+
+
+          ##insert these statement at the beginning of the program so that function can be called at runtime instead at compiletime
+        self.addInitializingCode(OpCode.OP_LOAD_CONSTANT, line_num=0)
+        self.addInitializingCode(class_index, line_num=0)
+
+        self.addInitializingCode(OpCode.OP_DEFINE_GLOBAL, line_num=0)
+        self.addInitializingCode(class_name_constant_index, line_num=0)
+
+
+        #########################add properties ##############################
+        for variable in variable_statements: #variable = assignmentStatement 
+            lvalue_name = variable.lvalue.expr.literal 
+            rvalue      = variable.rvalue
+
+            class_constant.value.setPropertyName(property_name=lvalue_name)
+
+        self.setInsideClass(True)
+
+        for method in function_statements:
+            
+            method_name = method.function_identifier_expression.expr.literal
+            ip = self.getNextIPLocation()
+ 
+            self.compile(method)
+            
+            
+
+            method = MasterData(tipe=LanguageTypes.FUNCTION, 
+                               value=FunctionObject(name=method_name,
+                                                    arity=len(method.params_list),
+                                                    ip=ip,
+                                                    ))
+
+            class_constant.value.setMethodName(method_name=method_name, method=method)
+
+
+        self.setInsideClass(False)

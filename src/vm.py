@@ -13,6 +13,8 @@ class Vm:
         self.initializeChunk(chunk=chunk)
         self.initializeVm()
 
+        self.this_list = [LanguageConstants.NIL]
+
     def initializeVm(self):
         #self.table = {} #the reason this is only initialized once is due to the fact that initialization code pupulates it which is further utilized byt the program.
 
@@ -43,6 +45,18 @@ class Vm:
                        RANDOM_FUNCTION_IDENTIFIER: MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=RANDOM_FUNCTION),
                        TYPE_FUNCTION_IDENTIFIER:   MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=TYPE_FUNCTION), }
 
+
+    def pushThisList(self, obj):
+        self.this_list.append(obj)
+        self.pointThisTo(obj)
+
+    def popThisList(self):
+        self.pointThisTo(self.this_list.pop())
+
+    def pointThisTo(self, obj):
+        self.table['this'] = self.this_list[-1]
+
+
     def initializeChunk(self, chunk=None):
         self.chunk = chunk
         self.stack = [] # constainer for MasterData
@@ -58,34 +72,37 @@ class Vm:
         else:
             self.code_length = 0
 
+    def reportError(self, type_error, message):
+        raise Exception(f"{type_error}\n{message}\nAt line: {self.getCurrentInstructionLine()}")
 
 
     def reportVMError(self, message):
-        raise Exception(f"VM ERROR\n{message}\nAt line: {self.getCurrentInstructionLine()}")
+        self.reportError(type_error="VM ERROR", message=message)
+        
 
-    def reportError(self, message):
-        raise Exception(f"{message}\nAt line: {self.getCurrentInstructionLine()}")
+    def reportRunTimeError(self, message):
+        self.reportError(type_error="RUNTIME ERROR", message=message)
 
     def assertTypeEquality(self, op1, op2):
         if (op1.tipe == op2.tipe):
             return
         # op1.tipe.name, here .name can be called on `Enum` types to print their actual name
-        self.reportError(f"type mismatch between the following:\n1. {op1}\n2. {op2}\nExpecting type: {op1.tipe.name}\nFound type: {op2.tipe.name}")
+        self.reportRunTimeError(f"type mismatch between the following:\n1. {op1}\n2. {op2}\nExpecting type: {op1.tipe.name}\nFound type: {op2.tipe.name}")
 
     def assertType(self, op1, tipe):
         if (op1.tipe == tipe):
             return
-        self.reportError(f"operation can't be performed on: \n{op1}\nExpecting type: {tipe.name}\nFound type: {op1.tipe.name}")
+        self.reportRunTimeError(f"operation can't be performed on: \n{op1}\nExpecting type: {tipe.name}\nFound type: {op1.tipe.name}")
 
     def assertOptionalTypes(self, op1, *tipes):
         if (op1.tipe in tipes):
             return
-        self.reportError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
+        self.reportRunTimeError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
     def assertArgumentEquality(self, function, number):
         if (function.value.arity == number.value):
             return 
-        self.reportError(f"Argument mismatch for function {function}\nExpecting: {function.value.arity} args\nGot: {number.value} args")
+        self.reportRunTimeError(f"Argument mismatch for function {function}\nExpecting: {function.value.arity} args\nGot: {number.value} args")
 
     def exec(self, current_op_code):
         # breakpoint()
@@ -320,11 +337,17 @@ class Vm:
         elif (current_op_code == OpCode.OP_CALL):
             #### modify stack to include ebp ############
             # breakpoint()
-            function_object = self.popStack()
+            callable_object = self.popStack()
             num_args        = self.popStack()
 
-            self.assertOptionalTypes(function_object, LanguageTypes.FUNCTION, LanguageTypes.NATIVE_FUNCTION)
-            self.assertArgumentEquality(function_object, num_args)
+            # breakpoint()
+
+            self.assertOptionalTypes(callable_object, LanguageTypes.FUNCTION,
+                                                      LanguageTypes.NATIVE_FUNCTION, 
+                                                      LanguageTypes.CLASS,
+                                                      LanguageTypes.INSTANCE)
+
+            self.assertArgumentEquality(callable_object, num_args)
 
 
             EBP = MasterData(tipe=LanguageTypes.NUMBER, value=self.getEBP())
@@ -334,26 +357,63 @@ class Vm:
             #############################################
             #in case of native function, new ip is not set however all equivalent procedures are carried out to simulate function call
             #the following if branch simulates function call, and return
-            if function_object.tipe == LanguageTypes.NATIVE_FUNCTION:
+            if callable_object.tipe == LanguageTypes.NATIVE_FUNCTION:
                 # breakpoint()
                 
-                custom_function = function_object.value
+                custom_function = callable_object.value
                 #int(num_args_value) is required because its floating point by default
                 args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
 
                 try:                
                     return_value = custom_function.call(*args) #
                 except Exception as e:
-                    self.reportError(message=f"{e.args[0]}")
+                    self.reportRunTimeError(message=f"{e.args[0]}")
 
                 self.pushStack(return_value) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
                 self.setEBX(return_value)
 
                 self.stackCleanup()
+
+            elif callable_object.tipe == LanguageTypes.CLASS:
+
+                custom_class = callable_object.value
+
+                #int(num_args_value) is required because its floating point by default
+                args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
+                
+                return_instance = custom_class.call(*args)
+
+                self.pushStack(return_instance) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
+                self.setEBX(return_instance)
+
+                self.stackCleanup()
+
+            elif callable_object.tipe == LanguageTypes.INSTANCE:
                 
 
+                custom_class = callable_object.value
+
+                #int(num_args_value) is required because its floating point by default
+                args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
+                
+                return_value = custom_class.call(*args)
+
+                self.pushStack(return_value) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
+                self.setEBX(return_value)
+
+                self.stackCleanup()
+
             else:
-                function_ip_index = function_object.value.ip # this returns the index of the function pointer that the ip should point to
+                #for normal function call, check if the function is actually called by any instance, if it's found to be intance
+                #method, set this to instance method
+                # breakpoint()
+                if instance := callable_object.value.instance:
+                    self.pushThisList(obj=instance) #remove this after the function ends at ret
+                else:
+                    self.pushThisList(obj=callable_object)
+
+                function_ip_index = callable_object.value.ip # this returns the index of the function pointer that the ip should point to
+
                 
                 # actual_ip = self.table[function_ip_index]
 
@@ -383,6 +443,20 @@ class Vm:
             self.setIP(int(return_pointer.value)) #seth the callee environment
             self.stackCleanup() #cleanup temporaries value in created in the function frame
 
+            self.popThisList()
+
+        elif (current_op_code == OpCode.OP_GET_PROPERTY):
+            instance = self.popStack()
+
+            self.assertType(op1=instance, tipe=LanguageTypes.INSTANCE)
+
+            prop_name = self.popStack()
+
+            prop_value = instance.value.getProperty(prop_name.value)
+
+            self.pushStack(prop_value) 
+
+
         else:
             self.reportVMError(f"unknown op_code at ip: {self.getIP()}, current_op_code: {current_op_code}")
         
@@ -396,7 +470,7 @@ class Vm:
             self.run_() 
 
         if chunk is None:
-            self.reportError(message="main bytearray is not included")
+            self.reportRunTimeError(message="main bytearray is not included")
         
 
         
@@ -520,7 +594,7 @@ class Vm:
         try:
             return self.table[key]
         except KeyError as e:
-            self.reportError(f"variable `{key}` is not defined")
+            self.reportRunTimeError(f"variable `{key}` is not defined")
     
 
     def setIntoTable(self, key, value, check_if_exists=True):
