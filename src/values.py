@@ -1,9 +1,10 @@
 from enum import Enum, auto
 
 class LanguageTypes(Enum):
+	TYPE            = auto(),
 	NUMBER          = auto(),
 	BOOLEAN         = auto(),
-	NULL            = auto()
+	NULL            = auto(),
 	STRING          = auto(),
 	FUNCTION        = auto(),
 	NATIVE_FUNCTION = auto(),
@@ -51,12 +52,16 @@ class FunctionObject:
 		return f"{self.name}"
 
 class NativeFunctionObject:
-	def __init__(self, name, arity, ip=None):
+	def __init__(self, name, arity, ip=None, instance=None):
 		self.name = name 
 		self.arity = arity
 
 		self.ip = ip
 		self.function = None
+		self.instance = instance
+
+	def setInstance(self, instance):
+		self.instance = instance
 
 	def setFunction(self, function):
 		self.function = function 

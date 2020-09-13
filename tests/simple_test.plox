@@ -456,73 +456,92 @@
 
 # main();
 
-fun fib(n){
-	match n {
-		case <=2 => return 1
-		case default => return this(n-1) + this(n-2)
-	};
+# fun fib(n){
+# 	match n {
+# 		case <=2 => return 1
+# 		case default => return this(n-1) + this(n-2)
+# 	};
 	
-};
+# };
 
-class TestClass{
-	fun TestClass(){
+# class TestClass{
+# 	fun TestClass(){
 
-	};
-	fun printHello(){
-		print "hello world ! from TestClass";
-	};
+# 	};
+# 	fun printHello(){
+# 		print "hello world ! from TestClass";
+# 	};
 
-	fun prettify(str1){
-		print "prettify " + str(this);
-		return "!!!!# " + str1 + " #!!!";
-	};
+# 	fun prettify(str1){
+# 		print "prettify " + str(this);
+# 		return "!!!!# " + str1 + " #!!!";
+# 	};
 
-	fun another(){
-		return this;
-	};
+# 	fun another(){
+# 		return this;
+# 	};
 
-	fun fib(n){
-		match n{
-			case <2        => return 1
-			case default   => return this.fib(n-1) + this.fib(n-2)
-		};
-	};
+# 	fun fib(n){
+# 		match n{
+# 			case <2        => return 1
+# 			case default   => return this.fib(n-1) + this.fib(n-2)
+# 		};
+# 	};
 
-};
+# };
 
-fun main() {
-	var c = TestClass;
-	print "the class is " + str(c);
-	print "type of class is " + type(c);
+# fun main() {
+# 	var c = TestClass;
+# 	print "the class is " + str(c);
+# 	print "type of class is " + type(c);
 
 
-	var d = TestClass();
+# 	var d = TestClass();
 
-	d.printHello();
+# 	d.printHello();
 
-	print d.prettify("hieeee");
+# 	print d.prettify("hieeee");
 
-	for(var i=0; i<=10; i+=1){
+# 	for(var i=0; i<=10; i+=1){
 
-		print "instance method " + str(d.fib(i));
-		print "class method " + str(TestClass.fib(i));
+# 		print "instance method " + str(d.fib(i));
+# 		print "class method " + str(TestClass.fib(i));
 
-	};
+# 	};
 
 	
 
-	print fib(10);
+# 	print fib(10);
 
-	print TestClass.fib(5);
+# 	print TestClass.fib(5);
 
-	print this;
+# 	print this;
 
-	print d.another();
-	print TestClass.another;
-	print TestClass;
+# 	print d.another();
+# 	print TestClass.another;
+# 	print TestClass;
 
 
+# };
+
+
+# main();
+
+
+fun main(){
+	var num = 100;
+
+	print String.str(num);
+
+	print Number.int(100.123);
+
+	print Random.random();
+
+	print Time.time();
+
+	print Runtime.type(100);
+
+	print Runtime.type(Runtime.type(100));
 };
-
 
 main();
