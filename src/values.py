@@ -76,6 +76,11 @@ class ClassObj:
 		self.property_names = [] #this is list
 		self.method_objects = {} #this is dict
 
+	def getProperty(self, method_name): # this is called by vm 
+		method = self.getMethod(method_name=method_name)
+		method.value.setInstance(MasterData(tipe=LanguageTypes.CLASS, value=self))
+		return method
+
 	def getMethod(self, method_name):
 		return self.method_objects[method_name]
 

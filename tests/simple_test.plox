@@ -477,6 +477,10 @@ class TestClass{
 		return "!!!!# " + str1 + " #!!!";
 	};
 
+	fun another(){
+		return this;
+	};
+
 	fun fib(n){
 		match n{
 			case <2        => return 1
@@ -487,9 +491,9 @@ class TestClass{
 };
 
 fun main() {
-	# var c = TestClass;
-	# print "the class is " + str(c);
-	# print "type of class is " + type(c);
+	var c = TestClass;
+	print "the class is " + str(c);
+	print "type of class is " + type(c);
 
 
 	var d = TestClass();
@@ -500,12 +504,22 @@ fun main() {
 
 	for(var i=0; i<=10; i+=1){
 
-		print d.fib(i);
+		print "instance method " + str(d.fib(i));
+		print "class method " + str(TestClass.fib(i));
+
 	};
+
+	
+
+	print fib(10);
+
+	print TestClass.fib(5);
 
 	print this;
 
-	print fib(10);
+	print d.another();
+	print TestClass.another;
+	print TestClass;
 
 
 };

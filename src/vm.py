@@ -358,6 +358,7 @@ class Vm:
             #in case of native function, new ip is not set however all equivalent procedures are carried out to simulate function call
             #the following if branch simulates function call, and return
             if callable_object.tipe == LanguageTypes.NATIVE_FUNCTION:
+                self.pushThisList(obj=callable_object.value)
                 # breakpoint()
                 
                 custom_function = callable_object.value
@@ -375,6 +376,7 @@ class Vm:
                 self.stackCleanup()
 
             elif callable_object.tipe == LanguageTypes.CLASS:
+                self.pushThisList(obj=callable_object.value)
 
                 custom_class = callable_object.value
 
@@ -390,6 +392,7 @@ class Vm:
 
             elif callable_object.tipe == LanguageTypes.INSTANCE:
                 
+                self.pushThisList(obj=callable_object.value)
 
                 custom_class = callable_object.value
 
@@ -446,13 +449,14 @@ class Vm:
             self.popThisList()
 
         elif (current_op_code == OpCode.OP_GET_PROPERTY):
-            instance = self.popStack()
+            # breakpoint()
+            obj = self.popStack()
 
-            self.assertType(op1=instance, tipe=LanguageTypes.INSTANCE)
+            self.assertOptionalTypes(obj, LanguageTypes.INSTANCE, LanguageTypes.CLASS)
 
             prop_name = self.popStack()
 
-            prop_value = instance.value.getProperty(prop_name.value)
+            prop_value = obj.value.getProperty(prop_name.value)
 
             self.pushStack(prop_value) 
 
