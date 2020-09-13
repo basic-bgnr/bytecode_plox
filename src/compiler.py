@@ -350,11 +350,26 @@ class Compiler:
             
 
     def visitAssignmentStatement(self, assignment_statement):
-        #if assignment takes place inside block the following compile function, put the rvalue in the stack
+      
+        if (isinstance(assignment_statement.lvalue, GetExpression)):
+            #compile the rhs
+            line_num = self.compile(assignment_statement.rvalue)
+            
+            #compile the lhs 
+            line_num = self.pushConstant(constant=MasterData(tipe=LanguageTypes.STRING, value=assignment_statement.lvalue.prop_or_method.literal), at_line=line_num)
+            line_num = self.compile(assignment_statement.lvalue.expr)
+
+            self.emitCode(op_code=OpCode.OP_SET_PROPERTY, at_line=line_num)
+
+            return line_num
+
+
+          #if assignment takes place inside block the following compile function, put the rvalue in the stack
         # but the global variable table remains unchanged, local variables are managed completely by using the
         # stack
 
         #carry out the follwing only when the variables are decalared in local context
+
         if (self.isLocal()):
             #compute local variable reference, most recent local variable is already in the stack as 
             #a result of `self.compile(assignmen_statement.rvalue) [see above]
@@ -364,6 +379,20 @@ class Compiler:
             return self.addGlobalAssignment(assignment_statement)
 
     def visitReassignmentStatement(self, reassignment_statement):
+
+        if (isinstance(reassignment_statement.lvalue, GetExpression)):
+            # compile rhs
+            line_num = self.compile(reassignment_statement.rvalue)
+
+            # compile lhs
+            line_num = self.pushConstant(constant=MasterData(tipe=LanguageTypes.STRING, value=reassignment_statement.lvalue.prop_or_method.literal), at_line=line_num)
+            line_num = self.compile(reassignment_statement.lvalue.expr)
+            
+
+            self.emitCode(op_code=OpCode.OP_SET_PROPERTY, at_line=line_num)
+
+            return line_num
+
         #if assignment takes place inside block the following compile function, put the rvalue in the stack
         # but the global variable table remains unchanged, local variables are managed completely by using the
         # stack
@@ -755,6 +784,7 @@ class Compiler:
 
         self.emitCode(op_code=OpCode.OP_GET_PROPERTY, at_line=line_num)
 
+        return line_num
 
 
     def visitClassStatement(self, class_statement):
@@ -796,7 +826,7 @@ class Compiler:
             method_name = method.function_identifier_expression.expr.literal
             ip = self.getNextIPLocation()
  
-            self.compile(method)
+            line_num = self.compile(method)
             
             
 
@@ -810,3 +840,5 @@ class Compiler:
 
 
         self.setInsideClass(False)
+
+        return line_num

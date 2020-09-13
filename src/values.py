@@ -119,6 +119,8 @@ class InstanceObj:
 		except KeyError:#if method is not found try property
 			return self.properties[value]
 
+	def setProperty(self, lvalue, rvalue):#lvaue: string, rvlaue:MasterData
+		self.properties[lvalue] = rvalue
 
 	def __str__(self):
 		return f"{self.class_}"

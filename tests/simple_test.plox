@@ -527,6 +527,15 @@
 
 # main();
 
+class simpleTest{
+	fun simpleTest(){
+
+	};
+
+	fun print(){
+		print this.printable;
+	};
+};
 
 fun main(){
 	var num = 100;
@@ -542,6 +551,22 @@ fun main(){
 	print Runtime.type(100);
 
 	print Runtime.type(Runtime.type(100));
+
+
+	var ins = simpleTest();
+
+	print ins ;
+
+	ins.printable = "dynamically set value";
+
+	ins.print();
+
+	var ins2 = simpleTest();
+	ins2.printable = "hahaha shdf";
+	ins2.print();
+
+	ins.print();
+
 };
 
 main();

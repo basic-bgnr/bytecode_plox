@@ -456,10 +456,24 @@ class Vm:
 
             prop_name = self.popStack()
 
-            prop_value = obj.value.getProperty(prop_name.value)
+            try:
+                prop_value = obj.value.getProperty(prop_name.value)
+            except KeyError:
+                self.reportRunTimeError(message=f"'{prop_name.value}' not set on object {obj}")
 
             self.pushStack(prop_value) 
 
+        elif (current_op_code == OpCode.OP_SET_PROPERTY):
+            # breakpoint()
+            obj = self.popStack()
+
+            self.assertOptionalTypes(obj, LanguageTypes.INSTANCE)
+
+            prop_name = self.popStack()
+
+            new_value = self.popStack()
+
+            prop_value = obj.value.setProperty(lvalue=prop_name.value, rvalue=new_value)
 
         else:
             self.reportVMError(f"unknown op_code at ip: {self.getIP()}, current_op_code: {current_op_code}")
