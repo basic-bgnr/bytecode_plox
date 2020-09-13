@@ -527,46 +527,140 @@
 
 # main();
 
-class simpleTest{
-	fun simpleTest(){
+# class simpleTest{
 
+# 	fun simpleTest(name){
+# 		this.name = simpleTest.modify(name);
+
+# 		return this;
+# 	};
+
+# 	fun modify(string){
+# 		return "!!!^ " + string + " ^!!!";
+# 	};
+
+# 	fun add(a, b) {
+# 		return a+ simpleTest.id(b);
+# 	};
+# 	fun id(b){
+# 		return b;
+# 	};
+
+# 	fun printName(){
+# 		print this.name;
+# 	};
+# };
+
+# fun main(){
+# 	var ins = simpleTest("bidit");
+
+# 	ins.printName();
+# 	print ins.add(2, 3);
+
+# 	var ins2 = simpleTest("random");
+
+# 	ins2.printName();
+# 	print ins2.add(20, 3);
+
+# };
+
+# main();
+
+
+# class simpleTest{
+
+# 	fun modify(string){
+# 		return "!!!^ " + string + " ^!!!";
+# 	};
+
+# 	fun add(a, b) {
+# 		return a+ simpleTest.id(b);
+# 	};
+# 	fun id(b){
+# 		return b;
+# 	};
+
+# 	fun printName(){
+# 		print this.name;
+# 	};
+# };
+
+# fun main(){
+# 	var ins = simpleTest();
+
+# 	print ins.modify("hello");
+
+# };
+
+# main();
+
+
+class simpleTest{
+	fun simpleTest(name){
+		this.name = name;
+
+		return this;
 	};
 
-	fun print(){
-		print this.printable;
+	fun modify(string){
+		return "!!!^ " + string + " ^!!!";
+	};
+
+	fun add(a, b) {
+		return a+ simpleTest.id(b);
+	};
+
+	fun id(b){
+		return b;
+	};
+
+	fun printName(){
+		print this.name;
+	};
+
+	fun fib(n){
+		match n{
+			case <2      => return 1
+			case default => return this.fib(n-1) + this.fib(n-2) 
+		};
+	};
+
+	fun fact(n){
+		match n{
+			case <=0     => return 1
+			case default => return n * this.fact(n-1) 
+		};	
+	};
+
+	fun dact(n){
+		return 1/this.fact(n);
 	};
 };
 
 fun main(){
-	var num = 100;
+	var ins = simpleTest("bidit");
 
-	print String.str(num);
+	print ins;
 
-	print Number.int(100.123);
+	ins.printName();
+	print ins.modify("hello");
 
-	print Random.random();
+	var limit = 10;
 
-	print Time.time();
+	for(var i = 0; i<=limit; i += 1){
+		if i == 5 {
+			continue;
+		};
+		if i == 9 {
+			break;
+		};
 
-	print Runtime.type(100);
+		print String.str(i) + ".  " + String.str(ins.fib(i));
 
-	print Runtime.type(Runtime.type(100));
+	};
 
-
-	var ins = simpleTest();
-
-	print ins ;
-
-	ins.printable = "dynamically set value";
-
-	ins.print();
-
-	var ins2 = simpleTest();
-	ins2.printable = "hahaha shdf";
-	ins2.print();
-
-	ins.print();
-
+	print simpleTest.fact(5);
+	print simpleTest.dact(5);
 };
 
 main();

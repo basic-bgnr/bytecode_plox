@@ -797,6 +797,7 @@ class Compiler:
         class_name = class_identifier_expression.expr.literal
 
         class_constant = MasterData(tipe=LanguageTypes.CLASS, value=ClassObj(name=class_name))
+        constructor_function_arity = 0
         class_index = self.makeConstant(constant=class_constant)
 
         #this is for use in the vm for indexing function table 
@@ -824,6 +825,10 @@ class Compiler:
         for method in function_statements:
             
             method_name = method.function_identifier_expression.expr.literal
+            
+            if method_name == class_name: #this is the constructor
+                constructor_function_arity = len(method.params_list)
+
             ip = self.getNextIPLocation()
  
             line_num = self.compile(method)
@@ -840,5 +845,8 @@ class Compiler:
 
 
         self.setInsideClass(False)
+
+        #set the arity of the class
+        class_constant.value.arity=constructor_function_arity
 
         return line_num

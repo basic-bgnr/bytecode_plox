@@ -99,10 +99,10 @@ class Vm:
             return
         self.reportRunTimeError(f"operation can't be performed on:{op1.tipe.name}\nExpecting one of [{','.join([tipe.name for tipe in tipes])}] types")
 
-    def assertArgumentEquality(self, function, number):
-        if (function.value.arity == number.value):
+    def assertArgumentEquality(self, callable, number):
+        if (callable.value.arity == number.value):
             return 
-        self.reportRunTimeError(f"Argument mismatch for function {function}\nExpecting: {function.value.arity} args\nGot: {number.value} args")
+        self.reportRunTimeError(f"Argument mismatch for callable {callable}\nExpecting: {callable.value.arity} args\nGot: {number.value} args")
 
     def exec(self, current_op_code):
         # breakpoint()
@@ -336,16 +336,17 @@ class Vm:
 
         elif (current_op_code == OpCode.OP_CALL):
             #### modify stack to include ebp ############
-            # breakpoint()
             callable_object = self.popStack()
             num_args        = self.popStack()
 
             # breakpoint()
 
+
+            # breakpoint()
+
             self.assertOptionalTypes(callable_object, LanguageTypes.FUNCTION,
                                                       LanguageTypes.NATIVE_FUNCTION, 
-                                                      LanguageTypes.CLASS,
-                                                      LanguageTypes.INSTANCE)
+                                                      LanguageTypes.CLASS)
 
             self.assertArgumentEquality(callable_object, num_args)
 
@@ -358,7 +359,7 @@ class Vm:
             #in case of native function, new ip is not set however all equivalent procedures are carried out to simulate function call
             #the following if branch simulates function call, and return
             if callable_object.tipe == LanguageTypes.NATIVE_FUNCTION:
-                self.pushThisList(obj=callable_object.value)
+                self.pushThisList(obj=callable_object)
                 # breakpoint()
                 
                 custom_function = callable_object.value
@@ -376,35 +377,40 @@ class Vm:
                 self.stackCleanup()
 
             elif callable_object.tipe == LanguageTypes.CLASS:
-                self.pushThisList(obj=callable_object.value)
+                self.pushThisList(obj=callable_object)
 
                 custom_class = callable_object.value
 
                 #int(num_args_value) is required because its floating point by default
-                args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
+                return_instance = custom_class.call()
+
+                if num_args.value > 0:
+                    ##########################simulate functon call####################
+                    self.pushThisList(return_instance) # now this refers to
+                    constructor_function = return_instance.value.getProperty(custom_class.name)
+                    self.setIP(constructor_function.value.ip) #return the constructor function
+                    ##################################################################
+                else:
+                    self.pushStack(return_instance) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
+                    self.setEBX(return_instance)
+                    #we avoid stackcleanup here, because we manually set the ip to constructor function which separately calls for cleaning the stack
+                    self.stackCleanup()
+
+            # elif callable_object.tipe == LanguageTypes.INSTANCE:
                 
-                return_instance = custom_class.call(*args)
+            #     self.pushThisList(obj=callable_object.value)
 
-                self.pushStack(return_instance) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
-                self.setEBX(return_instance)
+            #     custom_class = callable_object.value
 
-                self.stackCleanup()
-
-            elif callable_object.tipe == LanguageTypes.INSTANCE:
+            #     #int(num_args_value) is required because its floating point by default
+            #     args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
                 
-                self.pushThisList(obj=callable_object.value)
+            #     return_value = custom_class.call(*args)
 
-                custom_class = callable_object.value
+            #     self.pushStack(return_value) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
+            #     self.setEBX(return_value)
 
-                #int(num_args_value) is required because its floating point by default
-                args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
-                
-                return_value = custom_class.call(*args)
-
-                self.pushStack(return_value) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
-                self.setEBX(return_value)
-
-                self.stackCleanup()
+            #     self.stackCleanup()
 
             else:
                 #for normal function call, check if the function is actually called by any instance, if it's found to be intance

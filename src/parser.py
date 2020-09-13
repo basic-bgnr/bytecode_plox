@@ -7,9 +7,9 @@ class ClassStatement():
 
         ##check if class constructor is defined, raise error if not 
 
-        class_name_token = self.class_identifier_expression.expr
-        if class_name_token.literal not in map(lambda function: function.function_identifier_expression.expr.literal, function_statements):
-            raise Exception(f"class constructor is not defined for class {class_name_token.literal} at line {class_name_token.line}")
+        # class_name_token = self.class_identifier_expression.expr
+        # if class_name_token.literal not in map(lambda function: function.function_identifier_expression.expr.literal, function_statements):
+        #     raise Exception(f"class constructor is not defined for class {class_name_token.literal} at line {class_name_token.line}")
         #to do: check if the class constructor have return statement and raise error if it's present 
 
         self.name = "<class>"
