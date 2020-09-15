@@ -776,7 +776,7 @@ class List {
 	fun toString(){
 		match this.tail {
 			case None    => return "(" + String.str(this.head) + ")"
-			case default => return "(" + String.str(this.head) + this.tail.toString() + ")"
+			case default => return "(head: " + String.str(this.head) + ", tail: " + this.tail.toString() + ")"
 
 		};
 	};
@@ -794,7 +794,9 @@ fun main(){
 
       var range_clone = range.clone();
 
-      range.pprint();      
+      range.map(sqr);
+
+      print range.toString();
       print "----------------";
       print range.sum();
       print "----------------";
@@ -803,6 +805,9 @@ fun main(){
 
 
       print range_clone.toString();
+
+      print List.range(1, 10)
+                .toString();
       
 
       
