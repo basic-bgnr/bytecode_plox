@@ -48,12 +48,13 @@ class Vm:
 
     def pushThisList(self, obj):
         self.this_list.append(obj)
-        self.pointThisTo(obj)
+        self.pointThisTo()
 
     def popThisList(self):
-        self.pointThisTo(self.this_list.pop())
+        self.this_list.pop()
+        self.pointThisTo()
 
-    def pointThisTo(self, obj):
+    def pointThisTo(self):
         self.table['this'] = self.this_list[-1]
 
 
@@ -160,7 +161,7 @@ class Vm:
             op2 = self.popStack()
 
             # self.assertTypeEquality(op1, op2)
-            self.assertOptionalTypes(op1, op2.tipe, LanguageTypes.NULL)
+            #self.assertOptionalTypes(op1, op2.tipe, LanguageTypes.NULL)
 
             output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value == op2.value)
 
@@ -360,7 +361,7 @@ class Vm:
             #in case of native function, new ip is not set however all equivalent procedures are carried out to simulate function call
             #the following if branch simulates function call, and return
             if callable_object.tipe == LanguageTypes.NATIVE_FUNCTION:
-                self.pushThisList(obj=callable_object)
+                # self.pushThisList(obj=callable_object)
                 # breakpoint()
                 
                 custom_function = callable_object.value
@@ -377,7 +378,7 @@ class Vm:
 
                 self.stackCleanup()
             elif callable_object.tipe == LanguageTypes.CLASS:
-                self.pushThisList(obj=callable_object)
+                # self.pushThisList(obj=callable_object)
 
                 custom_class = callable_object.value
 

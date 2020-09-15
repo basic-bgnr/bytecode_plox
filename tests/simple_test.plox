@@ -774,11 +774,9 @@ class List {
 	};
 
 	fun toString(){
-		var head = this.head;
-		var tail = this.tail;
-		match tail {
-			case None    => return "(" + String.str(head) + ")"
-			case default => return "(" + String.str(head) + tail.toString() + ")"
+		match this.tail {
+			case None    => return "(" + String.str(this.head) + ")"
+			case default => return "(" + String.str(this.head) + this.tail.toString() + ")"
 
 		};
 	};
@@ -792,23 +790,22 @@ fun sqr(a){
 
 
 fun main(){
-      # var range = List.rangeStep(1, 5, 0.5);
+      var range = List.rangeStep(1, 5, 0.5);
 
-      # var range_clone = range.clone();
+      var range_clone = range.clone();
 
-      # range.pprint();      
-      # print "----------------";
-      # print range.sum();
-      # print "----------------";
-      # print range.prod();
-      # print "----------------";
+      range.pprint();      
+      print "----------------";
+      print range.sum();
+      print "----------------";
+      print range.prod();
+      print "----------------";
+
+
+      print range_clone.toString();
       
-      var lst = List(1);
 
-      lst.push(2)
-         .push(3);
       
-      print List(1).toString();
                 
 };
 
