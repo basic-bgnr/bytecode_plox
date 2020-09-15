@@ -159,7 +159,8 @@ class Vm:
             op1 = self.popStack() 
             op2 = self.popStack()
 
-            self.assertTypeEquality(op1, op2)
+            # self.assertTypeEquality(op1, op2)
+            self.assertOptionalTypes(op1, op2.tipe, LanguageTypes.NULL)
 
             output = MasterData(tipe=LanguageTypes.BOOLEAN, value = op1.value == op2.value)
 
@@ -375,7 +376,6 @@ class Vm:
                 self.setEBX(return_value)
 
                 self.stackCleanup()
-
             elif callable_object.tipe == LanguageTypes.CLASS:
                 self.pushThisList(obj=callable_object)
 

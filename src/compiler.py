@@ -599,17 +599,9 @@ class Compiler:
         # print('incallable')
         self.addToFunctionTable(function=function_expression)
         
+        line_num =0 #dummy value 
         for arg in function_expression.args:
             line_num = self.compile(arg) # push the args in the stack
-        else:#if no arg is supplied
-            if isinstance(function_expression.caller_expr,GetExpression):
-                line_num = function_expression.caller_expr.expr.expr.line #get expression
-                function_name = function_expression.caller_expr.expr.expr.literal
-
-            if isinstance(function_expression.caller_expr, LiteralExpression):
-                line_num = function_expression.caller_expr.expr.line #literal expression
-                function_name = function_expression.caller_expr.expr.literal
-
         #return pointer address, make the pointer address constant and load it using OP_CONSTANT
         
         self.emitCode(OpCode.OP_LOAD_CONSTANT, at_line=line_num)
