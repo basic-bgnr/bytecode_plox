@@ -10,6 +10,7 @@ class OpCode(Enum):
 	OP_MUL = auto(),
 	OP_DIV = auto(),
 	OP_NEG = auto(),
+	OP_MOD = auto(),
 
 	OP_EQUAL = auto(),
 	OP_LESS = auto(),

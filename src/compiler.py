@@ -299,6 +299,9 @@ class Compiler:
         elif (operator.tipe == TokenType.GREATER_EQUAL):
             self.emitCode(OpCode.OP_GREATER_EQUAL, at_line = operator.line)
 
+        elif (operator.tipe == TokenType.MODULO):
+            self.emitCode(OpCode.OP_MOD, at_line = operator.line)
+
         return line_num
 
 

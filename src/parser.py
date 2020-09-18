@@ -603,8 +603,12 @@ class Parser:
                 raise Exception(f"for statement should be followed by parenthesis in at line {self.peek().line}")
 
             self.advance() # consume the `(`
-            
-            initializer_statement = self.parseStatement()
+
+            try:            
+                initializer_statement = self.parseStatement()
+            except:
+                initializer_statement = None # if initializer is not found, leave it, it's optional
+
             if (self.peek().tipe != TokenType.SEMICOLON):
                 raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
             self.advance() # consume the semicolon
@@ -616,8 +620,12 @@ class Parser:
             if (self.peek().tipe != TokenType.SEMICOLON):
                 raise Exception(f"for statement parameters must be separated by semicolon at line {self.peek().line}")
             self.advance() # consume the semicolon
-            
-            increment_statement = self.parseStatement() # optional so doesn't raised exception
+
+            try:
+                increment_statement = self.parseStatement() # optional so doesn't raised exception
+            except:
+                increment_statement = None; # it's optional
+
             if (self.peek().tipe != TokenType.RIGHT_PAREN):
                 raise Exception(f"no matching parenthesis in for statement at line {self.peek().line}")
             self.advance() # consume the right paren
@@ -690,7 +698,7 @@ class Parser:
         
     def multiplicationExpr(self):
         left_expr = self.unitaryExpr()
-        if (self.peek().tipe in [TokenType.STAR, TokenType.SLASH]):
+        if (self.peek().tipe in [TokenType.STAR, TokenType.SLASH, TokenType.MODULO]):
             operator = self.advance() #consume the operator
             right_expr = self.multiplicationExpr()
             return BinaryExpression(left_expr, operator, right_expr)

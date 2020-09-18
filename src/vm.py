@@ -111,6 +111,17 @@ class Vm:
             constant_to_load =self.loadConstant()
             self.pushStack(constant_to_load)
 
+        elif (current_op_code == OpCode.OP_MOD):
+            op1 = self.popStack() #MasterData
+            op2 = self.popStack() #MasterData
+
+            self.assertType(op1, LanguageTypes.NUMBER)
+            self.assertTypeEquality(op1, op2)
+
+            output = MasterData(tipe=op1.tipe, value = op1.value % op2.value)
+
+            self.pushStack(output)
+
         elif (current_op_code == OpCode.OP_ADD):
             op1 = self.popStack() #MasterData
             op2 = self.popStack() #MasterData

@@ -34,8 +34,11 @@ class Scanner:
 
 	def scanToken(self):
 		lexeme = self.advance()
+
+		if (lexeme == TokenType.MODULO.value):
+			self.addToken(TokenType.MODULO, '')
 		
-		if (lexeme == TokenType.WALL.value):
+		elif (lexeme == TokenType.WALL.value):
 			self.addToken(TokenType.WALL, '')
 
 		elif (lexeme == TokenType.LEFT_PAREN.value):
@@ -254,6 +257,7 @@ class TokenType(Enum):
   NEW_LINE = '\n'
   SEPARATOR = '_'
   WALL = '|'
+  MODULO = '%'
 
   #token to ignore
   TAB = '\t'
