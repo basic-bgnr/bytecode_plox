@@ -18,7 +18,7 @@ class MasterData:
 
 	def __str__(self):
 		if self.tipe == LanguageTypes.STRING:
-			return f'"{self.value}"'
+			return f'{self.value}'
 
 		if self.tipe in [LanguageTypes.FUNCTION, LanguageTypes.NATIVE_FUNCTION, LanguageTypes.CLASS, LanguageTypes.INSTANCE]:
 			return f"<{self.tipe.name} {self.value}>"

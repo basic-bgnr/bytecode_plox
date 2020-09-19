@@ -107,7 +107,10 @@ class Vm:
 
     def exec(self, current_op_code):
         # breakpoint()
-        if (current_op_code == OpCode.OP_LOAD_CONSTANT):
+        if (current_op_code == OpCode.OP_HALT):
+            exit(0)
+
+        elif (current_op_code == OpCode.OP_LOAD_CONSTANT):
             constant_to_load =self.loadConstant()
             self.pushStack(constant_to_load)
 

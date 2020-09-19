@@ -49,3 +49,5 @@ class OpCode(Enum):
 
 	OP_SET_PROPERTY = auto(),
 	OP_GET_PROPERTY = auto(),
+
+	OP_HALT = auto(),

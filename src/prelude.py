@@ -20,6 +20,7 @@ class NativeFunctions(Enum):
     TIME   = 'time',
     RANDOM = 'random',
     TYPE   = 'type',
+    EXIT   = 'exit',
 
 
 class NativeModuleGenerator:
@@ -113,6 +114,12 @@ class NativeModuleGenerator:
         TYPE_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.TYPE, value=x.tipe.name))
 
         RUNTIME_CLASS.value.setMethodName(method_name=TYPE_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=TYPE_FUNCTION))
+
+        EXIT_FUNCTION_IDENTIFIER = NativeFunctions.EXIT.value[0]
+        EXIT_FUNCTION = NativeFunctionObject(name=EXIT_FUNCTION_IDENTIFIER, arity=1)
+        EXIT_FUNCTION.setFunction(lambda x: exit(int(x.value)))
+
+        RUNTIME_CLASS.value.setMethodName(method_name=EXIT_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=EXIT_FUNCTION))
 
 
         return RUNTIME_CLASS
