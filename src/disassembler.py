@@ -9,18 +9,30 @@ class Disassembler:
     def disassemble(self):
         NotImplemented
 
+    @staticmethod
+    def findIndexOfHalt(codes):
+        for index, op_code in enumerate(codes):
+            if op_code == OpCode.OP_HALT:
+                return index
+
+
     def pretty_print(self):
 
         initializing_codes = self.formatOpCodes(header='INITIALIZING_CODES', chunk=self.initializing_codes.codes)
-        program_code       = self.formatOpCodes(header='PROGRAM_CODE', chunk=self.chunk.codes)
+
+
+        index_of_halt = Disassembler.findIndexOfHalt(self.chunk.codes)+1
+
+        program_code         = self.formatOpCodes(header='PROGRAM_CODE', chunk=self.chunk.codes[0:index_of_halt], origin_line_number= len(self.initializing_codes.codes))
+        function_object_code = self.formatOpCodes(header='FUNCTION_OBJECT_CODE', chunk=self.chunk.codes[index_of_halt:], origin_line_number=len(self.initializing_codes.codes) + index_of_halt)
 
         constant_pool = Disassembler.stringifyConstantPool(header='CONSTANT POOL', constant_pool=self.chunk.constants)
 
 
-        return '\n'.join(constant_pool + initializing_codes + program_code)
+        return '\n'.join(constant_pool + initializing_codes + program_code + function_object_code)
 
 
-    def formatOpCodes(self, header, chunk):
+    def formatOpCodes(self, header, chunk, origin_line_number=0):
         output_string = [f"{header:^50}"]
         # line_code_pair = zip(self.chunk.lines, self.chunk.codes)
         line_code_pair = zip(count(0, 1), chunk)
@@ -62,9 +74,9 @@ class Disassembler:
 
                 value = self.constantAt(index=next_byte) if op_code in op_codes_global else '[...]'
 
-                output_string.append(Disassembler.stringifyOpCode(line_number , op_code, f"[{next_byte}]", value))
+                output_string.append(Disassembler.stringifyOpCode(origin_line_number + line_number , op_code, f"[{next_byte}]", value))
             else:
-                output_string.append(Disassembler.stringifyOpCode(line_number, op_code))
+                output_string.append(Disassembler.stringifyOpCode(origin_line_number + line_number, op_code))
 
         return output_string
 

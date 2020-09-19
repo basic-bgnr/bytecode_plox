@@ -80,7 +80,7 @@ class Lox:
 
         disassembler = Disassembler(compiler.chunk, compiler.initializing_codes)
        
-        # vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = entry_point)
+        vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = 0)
         
 
     @staticmethod
@@ -109,7 +109,7 @@ class Lox:
 
         import time
         a = time.time()
-        vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = entry_point)
+        vm.run(compiler.chunk, initializing_codes=compiler.initializing_codes, start_at = 0)
         
         print("########################################################################")
         print('time ', time.time() -a)

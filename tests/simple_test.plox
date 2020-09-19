@@ -1,80 +1,87 @@
-# var outer = "outer";
-# {
-# 	var inner = outer;
-# 	print inner;
-# 	{
-# 		outer ="inner";
-# 		print outer;
-# 		inner = outer;
-# 	};
-# 	print inner;
-# };
-# print outer;
+fun scope_test(){
+  var outer = "outer";
+  {
+  	var inner = outer;
+  	print inner;
+  	{
+  		outer ="inner";
+  		print outer;
+  		inner = outer;
+  	};
+  	print inner;
+  };
+  print outer;
+};
+######################################################
+fun boolean_statement(){
+  var a = 10;
+  var a = a;
 
+  ######
+
+  if  false { 
+  	print true;
+  } else {
+  	print false;
+  };
+
+  if false {
+  	print true;
+  }else{
+  	print false;
+  };
+
+
+  var art = 1000;
+  var right1 = 100;
+  var right2 = 200;
+  if art * 20 == right1 * right2 {
+    print "art * 20 == right1 * right2";
+  # };
+  };
+  if true {
+       if !false {} else {print false;};
+    print "greater than 2";
+  };
+};
 
 ######################################################
 
-# var a = 10;
-# var a = a;
 
-######
 
-# if  false { 
-# 	print true;
-# } else {
-# 	print false;
+fun while_statement(){
+
+  print "fibonacci calculator ";
+
+  var x = 1;
+  var x_1 = 1;
+
+  var limit = 10;
+
+  while limit != 0 {
+      print x;
+      temp = x + x_1;
+      x = x_1;
+      x_1 = temp;
+
+      limit -= 1;
+  };
+};
+
+# fun for_statement(){
+#   var x  = 1;
+#   var x_ = 1;
+
+#   var limit = 1_1_1;
+
+#   for(;;) {
+#   	print x;
+#   	temp = x + x_;
+#   	x = x_;
+#   	x_ = temp;
+#   };
 # };
 
-# if false {
-# 	print true;
-# }else{
-# 	print false;
-# };
-
-
-
-# var art = 1000;
-# var right1 = 100;
-# var right2 = 200;
-# if art * 20 == right1 * right2 {
-# 	print "art * 20 == right1 * right2";
-# # };
-# };
-# if true {
-#      if !false {} else {print false;};
-# 	print "greater than 2";
-# };
-
-# print "fibonacci calculator ";
-
-# var x = 1;
-# var x_1 = 1;
-
-# var limit = 10;
-
-# while limit != 0 {
-#     print x;
-# 	temp = x + x_1;
-# 	x = x_1;
-# 	x_1 = temp;
-
-# 	limit -= 1;
-# };
-
-
-
-
-# var x  = 1;
-# var x_ = 1;
-
-# var limit = 1_1_1;
-
-# for(;;) {
-# 	print x;
-# 	temp = x + x_;
-# 	x = x_;
-# 	x_ = temp;
-# };
 
 
 #print "fibonacci calculator using fibonacci"
@@ -666,153 +673,153 @@
 
 # main();
 
-# class List {
+class List {
 
-# 	fun List(head){
-#           this.head = head;
-#           this.tail = None;
-#           return this;
-#     };
+	fun List(head){
+          this.head = head;
+          this.tail = None;
+          return this;
+    };
 
-#     fun push(a){
-#       var tail = List(a);
-#       this.tail = tail;
-#       return tail;
-#     };
+    fun push(a){
+      var tail = List(a);
+      this.tail = tail;
+      return tail;
+    };
 
-#     fun rangeStep(start, stop, step){
-#     	var head = List(start);
-#     	var tail = head;
-#     	for (var i = start+step; i<stop; i+=step){
-#     		tail = tail.push(i);
-#     	};
-#     	return head;
+    fun rangeStep(start, stop, step){
+    	var head = List(start);
+    	var tail = head;
+    	for (var i = start+step; i<stop; i+=step){
+    		tail = tail.push(i);
+    	};
+    	return head;
 
-#     };
+    };
 
-#     fun range(start, stop){
-#     	return this.rangeStep(start, stop, 1);    	
-#     };
+    fun range(start, stop){
+    	return this.rangeStep(start, stop, 1);    	
+    };
 
-#     fun map(func) {
-#     	 var list = this;
-#     	 while true {
-#           		list.head = func(list.head);
-#           		list = list.tail;
-#           		if list == None {
-#           			return this;
-#           		};
-#           };
-#      };
+    fun map(func) {
+    	 var list = this;
+    	 while true {
+          		list.head = func(list.head);
+          		list = list.tail;
+          		if list == None {
+          			return this;
+          		};
+          };
+     };
 
-#      fun fold(fold_func, initial_value){
-#      	var list = this;
-#      	var acc = initial_value;
-#      	while true {
-#      		var initial_next = fold_func(acc, list.head);
-#      		acc = initial_next;
-#      		list = list.tail;
-#      		if list == None{
-#      			return acc;
-#      		};
-#      	};
-#      };
+     fun fold(fold_func, initial_value){
+     	var list = this;
+     	var acc = initial_value;
+     	while true {
+     		var initial_next = fold_func(acc, list.head);
+     		acc = initial_next;
+     		list = list.tail;
+     		if list == None{
+     			return acc;
+     		};
+     	};
+     };
 
-#      fun clone(){
-#      	var list = this;
-#      	var new_list = List(list.head);
+     fun clone(){
+     	var list = this;
+     	var new_list = List(list.head);
 
-#      	var modified_list = new_list;
+     	var modified_list = new_list;
 
-#      	list = list.tail;
+     	list = list.tail;
 
-#       	while true {
-#       			modified_list = modified_list.push(list.head);
-#           		match list.tail {
-# 	          		case None    => return new_list
-# 	          		case default => list = list.tail
-#           		};
-#         };
-#     };
+      	while true {
+      			modified_list = modified_list.push(list.head);
+          		match list.tail {
+	          		case None    => return new_list
+	          		case default => list = list.tail
+          		};
+        };
+    };
 
-#     fun append(other_list){
-# 	    var list = this; 
-# 	    while true {
-#           		match list.tail {
-# 	          		case None    => {
-# 	          							list.tail = other_list;
-# 	          							return this;
-# 	          						}
-# 	          		case default => list = list.tail
-#           		};
-#         };
+    fun append(other_list){
+	    var list = this; 
+	    while true {
+          		match list.tail {
+	          		case None    => {
+	          							list.tail = other_list;
+	          							return this;
+	          						}
+	          		case default => list = list.tail
+          		};
+        };
 
-#     };
+    };
 
-#     fun pprint(){
-# 		this.map(this.print_);
-# 	};
+    fun pprint(){
+		this.map(this.print_);
+	};
 
-# 	fun sum(){
-# 		return this.fold(this.sum_, 0);
-# 	};
+	fun sum(){
+		return this.fold(this.sum_, 0);
+	};
 
-# 	fun prod(){
-# 		return this.fold(this.prod_, 1);
-# 	};
+	fun prod(){
+		return this.fold(this.prod_, 1);
+	};
 
-# 	fun sum_(a, b){
-# 		return a+b;
-# 	};
+	fun sum_(a, b){
+		return a+b;
+	};
 
-# 	fun prod_(a, b){
-# 		return a*b;
-# 	};
+	fun prod_(a, b){
+		return a*b;
+	};
 
-#     fun print_(a){
-# 		print a;
-# 		return a;
-# 	};
+    fun print_(a){
+		print a;
+		return a;
+	};
 
-# 	fun toString(){
-# 		match this.tail {
-# 			case None    => return "(" + String.str(this.head) + ")"
-# 			case default => return "(head: " + String.str(this.head) + ", tail: " + this.tail.toString() + ")"
+	fun toString(){
+		match this.tail {
+			case None    => return "(" + String.str(this.head) + ")"
+			case default => return "(head: " + String.str(this.head) + ", tail: " + this.tail.toString() + ")"
 
-# 		};
-# 	};
-# };
-
-
-
-# fun sqr(a){
-# 	return a * a;
-# };
+		};
+	};
+};
 
 
-# fun main(){
-#       var range = List.rangeStep(1, 5, 0.5);
 
-#       var range_clone = range.clone();
-
-#       range.map(sqr);
-
-#       print range.toString();
-#       print "----------------";
-#       print range.sum();
-#       print "----------------";
-#       print range.prod();
-#       print "----------------";
+fun sqr(a){
+	return a * a;
+};
 
 
-#       print range_clone.toString();
+fun main(){
+      var range = List.rangeStep(1, 5, 0.5);
 
-#       print List.range(1, 10)
-#                 .toString();
+      var range_clone = range.clone();
+
+      range.map(sqr);
+
+      print range.toString();
+      print "----------------";
+      print range.sum();
+      print "----------------";
+      print range.prod();
+      print "----------------";
+
+
+      print range_clone.toString();
+
+      print List.range(1, 10)
+                .toString();
       
 
       
                 
-# };
+};
 
-# main();      
+main();      

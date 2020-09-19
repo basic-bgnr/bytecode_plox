@@ -7,7 +7,7 @@ import LanguageConstants
 from itertools import count
 
 from ASTPrinter import ASTPrinter
-from parser import LiteralExpression, GetExpression
+from parser import LiteralExpression, GetExpression, FunctionStatement, ClassStatement
 
 
 #helper class to manage local variable in program stack
@@ -38,7 +38,7 @@ class Compiler:
         self.scope_entities = []# position of ScopeEntity is the position of the variable in the stack, enumerate(scapepositoin) => (stack_index, scope_entitiy)
         self.variable_in_scope = 0 #this is for calculating the number of times we need to pop, to remove the local variable from stack
 
-        self.function_table = {}
+        # self.function_table = {} #deprecated, needs to be removed
         
         self.scope_enitity_relative_point = 0
 
@@ -50,7 +50,21 @@ class Compiler:
         self.continue_modifier_entities = []
 
         self.is_inside_class = False 
+
+        self.deferred_functions_list = []
     ###########################################################################
+    def isDeferredFunctionsListEmpty(self):
+        return len(self.deferred_functions_list) == 0
+
+    def checkIfDeferred(self, function_statement):
+        return function_statement in self.deferred_functions_list
+
+    def pushIntoDeferredFunctionsList(self, function_statement):
+        self.deferred_functions_list.append(function_statement)
+
+    def popDeferredFunctionsList(self):
+        return self.deferred_functions_list.pop()
+
     def setInsideClass(self, value):
         self.is_inside_class = value
 
@@ -133,22 +147,26 @@ class Compiler:
         return self.scope_entities[-1].scope_depth
 
     ###############################################################################to remove
-    def addToFunctionTable(self, function):
-        if self.scope_depth == 0:
-            self.function_table[function.caller_expr.expr.literal] = (self.getNextIPLocation(), function.caller_expr.expr.line)
+    # def addToFunctionTable(self, function):
+    #     if self.scope_depth == 0:
+    #         self.function_table[function.caller_expr.expr.literal] = (self.getNextIPLocation(), 0)#function.caller_expr.expr.line)
 
-    def getFunctionPointer(self, function_name):
-        try:
-            return self.function_table[function_name][0] #(x, y) 
-        except KeyError:
-            self.reportError(f"{function_name} function is not called")
+    # def getFunctionPointer(self, function_name):
+    #     try:
+    #         return self.function_table[function_name][0] #(x, y) 
+    #     except KeyError:
+    #         self.reportError(f"{function_name} function is not called")
     ###############################################################################
     def getNextIPLocation(self):#this is to modify the next byteelf):
         return self.chunk.getNextIPLocation() #this is to modify the next byte
 
     def compileAll(self, AST):
+        line_num = 0
         for AS in AST:
-            self.compile(AS)
+            if isinstance(AS, FunctionStatement) or isinstance(AS, ClassStatement):
+                self.pushIntoDeferredFunctionsList(AS)
+            else:
+                line_num = self.compile(AS)
             # if self.compile(AS) is None:
             #   raise Expception("none occured ", AS)
 
@@ -157,12 +175,21 @@ class Compiler:
         # except:
         #   raise Exception("program must have function named 'main' as the only entry point")
         # breakpoint()
-        if len(self.function_table) > 1:
-            print(self.function_table)
-            lines = ', '.join([str(line_num) for key, (_, line_num) in self.function_table.items() if key != 'main'])
-            self.reportError(message = f"More than one global function call at line: {lines}")
 
-        return self.getFunctionPointer(function_name='main')
+        # if len(self.function_table) > 1:
+        #     print(self.function_table)
+        #     lines = ', '.join([str(line_num) for key, (_, line_num) in self.function_table.items() if key != 'main'])
+        #     self.reportError(message = f"More than one global function call at line: {lines}")
+
+        # return self.getFunctionPointer(function_name='main')
+        self.emitCode(op_code=OpCode.OP_HALT, at_line=line_num)
+
+        while not self.isDeferredFunctionsListEmpty():
+            function_to_compile = self.popDeferredFunctionsList()
+            self.compile(function_to_compile)
+
+
+        
 
 
     def compile(self, AS):
@@ -600,7 +627,7 @@ class Compiler:
 
     def visitCallableExpression(self, function_expression):
         # print('incallable')
-        self.addToFunctionTable(function=function_expression)
+        #self.addToFunctionTable(function=function_expression)
         
         line_num =0 #dummy value 
         for arg in function_expression.args:

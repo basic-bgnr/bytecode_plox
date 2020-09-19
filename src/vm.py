@@ -4,6 +4,10 @@ import LanguageConstants
 
 from prelude import NativeModuleGenerator
 
+class RuntimeHalt(Exception):
+    def __init__(self, message):
+        self.message = message 
+
 #Note: The vm's ip counter always points at the next instruction to execute
 class Vm:
     def __init__(self, chunk=None):
@@ -108,7 +112,7 @@ class Vm:
     def exec(self, current_op_code):
         # breakpoint()
         if (current_op_code == OpCode.OP_HALT):
-            exit(0)
+            raise RuntimeHalt(message="Halted")
 
         elif (current_op_code == OpCode.OP_LOAD_CONSTANT):
             constant_to_load =self.loadConstant()
@@ -534,8 +538,11 @@ class Vm:
         # self.setEBX(LanguageConstants.NIL)
 
     def run_(self):
-        while current_op_code := self.advanceOpCode():
-            self.exec(current_op_code)
+        try:
+            while current_op_code := self.advanceOpCode():
+                self.exec(current_op_code)
+        except RuntimeHalt as e:
+            return
 
 
     # calculate the location of stack variable when function frame is entered
