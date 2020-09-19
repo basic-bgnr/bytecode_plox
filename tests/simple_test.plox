@@ -377,10 +377,10 @@
 
 
 # fun sleep(time_sec) {
-# 	var begin = time();
+# 	var begin = Time.time();
 
 # 	time_sec = time_sec * 1000_000_000;
-# 	while time() - begin < time_sec {
+# 	while Time.time() - begin < time_sec {
 
 # 	};
 # };
@@ -388,52 +388,53 @@
 
 # fun main(){
 # 	var sleep_time = 5;
-# 	print "sleeping for " + str(sleep_time) + " seconds..... ";
+# 	print "sleeping for " + String.str(sleep_time) + " seconds..... ";
 # 	sleep(sleep_time);
 # 	print "now awake";
 
-# 	print "type of " + type(sleep_time);
+# 	print "type of " + String.str(Runtime.type(sleep_time));
 # };
 
 # main();
 
-#fun main(){
-#	var limit = 10;
-#	while limit > 0 {
-#		limit -= 1;
-#		var counter = 0;
-#		while counter < limit {
-#			counter += 1;
-#			if counter == 2 {
-#				var random = 234234;
-#				var ran3 =34234;
-#				{};
-#				continue;
-#
-#			};
-#			if counter == 4 {
-#				break;
-#			};
-#			
-#			print "counter " + str(counter);
-#		};
-#		if limit == 2 {
-#			continue;
-#		};
-#		print "number is " + str(limit);
-#	};
-#};
-#
-#main();
+# fun main(){
+# 	var limit = 10;
+# 	while limit > 0 {
+# 		limit -= 1;
+# 		var counter = 0;
+# 		while counter < limit {
+# 			counter += 1;
+# 			if counter == 2 {
+# 				var random = 234234;
+# 				var ran3 =34234;
+# 				{};
+# 				continue;
+
+# 			};
+# 			if counter == 4 {
+# 				break;
+# 			};
+			
+# 		print "counter " + String.str(counter);
+# 		};
+# 		if limit == 2 {
+# 			continue;
+# 		};
+# 		print "number is " + String.str(limit);
+# 	};
+# };
+
+# main();
 
 # fun main(){
 # 	var limit = 10;
-# 	for(var i = 0; i<=limit; {i+=1; print "always";}){
+#   var i = 0;
+# 	for(; i<=limit; {i+=1; print "always";}){
 # 		if i == 3 {
 # 			continue;			
 # 		};
 # 		if i == 7{
-# 			for (var j = 100; i<=110; {j += 1; break;}){
+# 			for (var j = 100; i<=110; {j += 1;}){
 				
 # 				if j == 105 {
 # 					break;
@@ -441,7 +442,7 @@
 # 				if j == 102 {
 # 					continue;
 # 				};
-# 				print "j " + str(j);
+# 				print "j " + String.str(j);
 # 			};
 # 		};
 # 		print i;
@@ -595,223 +596,223 @@
 # main();
 
 
-##class simpleTest{
-##	fun simpleTest(name){
-##		this.name = name;
-##
-##		return this;
-##	};
-##
-##	fun modify(string){
-##		return "!!!^ " + string + " ^!!!";
-##	};
-##
-##	fun add(a, b) {
-##		return a+ simpleTest.id(b);
-##	};
-##
-##	fun id(b){
-##		return b;
-##	};
-##
-##	fun printName(){
-##		print this.name;
-##	};
-##
-##	fun fib(n){
-##		match n{
-##			case <2      => return 1
-##			case default => return this.fib(n-1) + this.fib(n-2) 
-##		};
-##	};
-##
-##	fun fact(n){
-##		match n{
-##			case <=0     => return 1
-##			case default => return n * this.fact(n-1) 
-##		};	
-##	};
-##
-##	fun dact(n){
-##		return 1/this.fact(n);
-##	};
-##};
-##
-##fun main(){
-##	var ins = simpleTest("bidit");
-##
-##	print ins;
-##
-##	ins.printName();
-##	print ins.modify("hello");
-##
-##	var limit = 10;
-##
-##	for(var i = 0; i<=limit; i += 1){
-##		if i == 5 {
-##			continue;
-##		};
-##		if i == 9 {
-##			break;
-##		};
-##
-##		print String.str(i) + ".  " + String.str(ins.fib(i));
-##
-##	};
-##
-##	print simpleTest.fact(5);
-##	print simpleTest.dact(5);
-##};
-##
-##main();
+# class simpleTest{
+# 	fun simpleTest(name){
+# 		this.name = name;
 
-class List {
+# 		return this;
+# 	};
 
-	fun List(head){
-          this.head = head;
-          this.tail = None;
-          return this;
-    };
+# 	fun modify(string){
+# 		return "!!!^ " + string + " ^!!!";
+# 	};
 
-    fun push(a){
-      var tail = List(a);
-      this.tail = tail;
-      return tail;
-    };
+# 	fun add(a, b) {
+# 		return a+ simpleTest.id(b);
+# 	};
 
-    fun rangeStep(start, stop, step){
-    	var head = List(start);
-    	var tail = head;
-    	for (var i = start+step; i<stop; i+=step){
-    		tail = tail.push(i);
-    	};
-    	return head;
+# 	fun id(b){
+# 		return b;
+# 	};
 
-    };
+# 	fun printName(){
+# 		print this.name;
+# 	};
 
-    fun range(start, stop){
-    	return this.rangeStep(start, stop, 1);    	
-    };
+# 	fun fib(n){
+# 		match n{
+# 			case <2      => return 1
+# 			case default => return this.fib(n-1) + this.fib(n-2) 
+# 		};
+# 	};
 
-    fun map(func) {
-    	 var list = this;
-    	 while true {
-          		list.head = func(list.head);
-          		list = list.tail;
-          		if list == None {
-          			return this;
-          		};
-          };
-     };
+# 	fun fact(n){
+# 		match n{
+# 			case <=0     => return 1
+# 			case default => return n * this.fact(n-1) 
+# 		};	
+# 	};
 
-     fun fold(fold_func, initial_value){
-     	var list = this;
-     	var acc = initial_value;
-     	while true {
-     		var initial_next = fold_func(acc, list.head);
-     		acc = initial_next;
-     		list = list.tail;
-     		if list == None{
-     			return acc;
-     		};
-     	};
-     };
+# 	fun dact(n){
+# 		return 1/this.fact(n);
+# 	};
+# };
 
-     fun clone(){
-     	var list = this;
-     	var new_list = List(list.head);
+# fun main(){
+# 	var ins = simpleTest("bidit");
 
-     	var modified_list = new_list;
+# 	print ins;
 
-     	list = list.tail;
+# 	ins.printName();
+# 	print ins.modify("hello");
 
-      	while true {
-      			modified_list = modified_list.push(list.head);
-          		match list.tail {
-	          		case None    => return new_list
-	          		case default => list = list.tail
-          		};
-        };
-    };
+# 	var limit = 10;
 
-    fun append(other_list){
-	    var list = this; 
-	    while true {
-          		match list.tail {
-	          		case None    => {
-	          							list.tail = other_list;
-	          							return this;
-	          						}
-	          		case default => list = list.tail
-          		};
-        };
+# 	for(var i = 0; i<=limit; i += 1){
+# 		if i == 5 {
+# 			continue;
+# 		};
+# 		if i == 9 {
+# 			break;
+# 		};
 
-    };
+# 		print String.str(i) + ".  " + String.str(ins.fib(i));
 
-    fun pprint(){
-		this.map(this.print_);
-	};
+# 	};
 
-	fun sum(){
-		return this.fold(this.sum_, 0);
-	};
+# 	print simpleTest.fact(5);
+# 	print simpleTest.dact(5);
+# };
 
-	fun prod(){
-		return this.fold(this.prod_, 1);
-	};
+# main();
 
-	fun sum_(a, b){
-		return a+b;
-	};
+# class List {
 
-	fun prod_(a, b){
-		return a*b;
-	};
+# 	fun List(head){
+#           this.head = head;
+#           this.tail = None;
+#           return this;
+#     };
 
-    fun print_(a){
-		print a;
-		return a;
-	};
+#     fun push(a){
+#       var tail = List(a);
+#       this.tail = tail;
+#       return tail;
+#     };
 
-	fun toString(){
-		match this.tail {
-			case None    => return "(" + String.str(this.head) + ")"
-			case default => return "(head: " + String.str(this.head) + ", tail: " + this.tail.toString() + ")"
+#     fun rangeStep(start, stop, step){
+#     	var head = List(start);
+#     	var tail = head;
+#     	for (var i = start+step; i<stop; i+=step){
+#     		tail = tail.push(i);
+#     	};
+#     	return head;
 
-		};
-	};
-};
+#     };
 
+#     fun range(start, stop){
+#     	return this.rangeStep(start, stop, 1);    	
+#     };
 
+#     fun map(func) {
+#     	 var list = this;
+#     	 while true {
+#           		list.head = func(list.head);
+#           		list = list.tail;
+#           		if list == None {
+#           			return this;
+#           		};
+#           };
+#      };
 
-fun sqr(a){
-	return a * a;
-};
+#      fun fold(fold_func, initial_value){
+#      	var list = this;
+#      	var acc = initial_value;
+#      	while true {
+#      		var initial_next = fold_func(acc, list.head);
+#      		acc = initial_next;
+#      		list = list.tail;
+#      		if list == None{
+#      			return acc;
+#      		};
+#      	};
+#      };
+
+#      fun clone(){
+#      	var list = this;
+#      	var new_list = List(list.head);
+
+#      	var modified_list = new_list;
+
+#      	list = list.tail;
+
+#       	while true {
+#       			modified_list = modified_list.push(list.head);
+#           		match list.tail {
+# 	          		case None    => return new_list
+# 	          		case default => list = list.tail
+#           		};
+#         };
+#     };
+
+#     fun append(other_list){
+# 	    var list = this; 
+# 	    while true {
+#           		match list.tail {
+# 	          		case None    => {
+# 	          							list.tail = other_list;
+# 	          							return this;
+# 	          						}
+# 	          		case default => list = list.tail
+#           		};
+#         };
+
+#     };
+
+#     fun pprint(){
+# 		this.map(this.print_);
+# 	};
+
+# 	fun sum(){
+# 		return this.fold(this.sum_, 0);
+# 	};
+
+# 	fun prod(){
+# 		return this.fold(this.prod_, 1);
+# 	};
+
+# 	fun sum_(a, b){
+# 		return a+b;
+# 	};
+
+# 	fun prod_(a, b){
+# 		return a*b;
+# 	};
+
+#     fun print_(a){
+# 		print a;
+# 		return a;
+# 	};
+
+# 	fun toString(){
+# 		match this.tail {
+# 			case None    => return "(" + String.str(this.head) + ")"
+# 			case default => return "(head: " + String.str(this.head) + ", tail: " + this.tail.toString() + ")"
+
+# 		};
+# 	};
+# };
 
 
-fun main(){
-      var range = List.rangeStep(1, 5, 0.5);
 
-      var range_clone = range.clone();
-
-      range.map(sqr);
-
-      print range.toString();
-      print "----------------";
-      print range.sum();
-      print "----------------";
-      print range.prod();
-      print "----------------";
+# fun sqr(a){
+# 	return a * a;
+# };
 
 
-      print range_clone.toString();
+# fun main(){
+#       var range = List.rangeStep(1, 5, 0.5);
 
-      print List.range(1, 10)
-                .toString();
+#       var range_clone = range.clone();
+
+#       range.map(sqr);
+
+#       print range.toString();
+#       print "----------------";
+#       print range.sum();
+#       print "----------------";
+#       print range.prod();
+#       print "----------------";
+
+
+#       print range_clone.toString();
+
+#       print List.range(1, 10)
+#                 .toString();
       
 
       
                 
-};
+# };
 
-main();      
+# main();      

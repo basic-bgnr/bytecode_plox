@@ -74,7 +74,7 @@ class Vm:
             self.code_length = 0
 
     def reportError(self, type_error, message):
-        raise Exception(f"{type_error}\n{message}\nAt line: {self.getCurrentInstructionLine()}")
+        raise Exception(f"{type_error}\n{message}\nAt line: {self.getCurrentInstructionLine()}\nAt IP: {self.getIP()}")
 
 
     def reportVMError(self, message):
@@ -331,6 +331,7 @@ class Vm:
             self.putAtStack(index=stack_entry_index, value=value_to_put)
 
         elif (current_op_code == OpCode.OP_JMP_IF_FALSE):
+            # breakpoint()
             offset = self.advanceByte() # get the else condition instruction pointer
             condition = self.popStack() # pop the condition from stack, the net result of the statement is nullified
             #condition must be of type BOOLEAN
@@ -340,6 +341,7 @@ class Vm:
                 self.offsetIP(offset)
 
         elif (current_op_code == OpCode.OP_JMP):
+            # breakpoint()
             offset = self.advanceByte() # get the else condition instruction pointer
             self.offsetIP(offset)
 
@@ -580,7 +582,7 @@ class Vm:
         self.ip = ip
 
     def offsetIP(self, offset):
-        self.ip += offset
+        self.setIP(ip=self.getIP() + offset)
 
     def getIP(self):
         return self.ip
@@ -604,9 +606,11 @@ class Vm:
     def popStack(self):
         # print(self.ip, ' popping ', f"{[str(s) for s in self.stack[:-1]]}")
         # print('ebx ', self.getEBX())
-        self.reverseESP()
-        return self.stack.pop()
-
+        try:
+            self.reverseESP()
+            return self.stack.pop()
+        except IndexError as e:
+            self.reportVMError(message=e.args[0])
     def pushStack(self, value):
         self.advanceESP()
         self.stack.append(value)

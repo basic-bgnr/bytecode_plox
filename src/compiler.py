@@ -501,7 +501,7 @@ class Compiler:
             else:
                 break
 
-        self.emitCode(op_code=OpCode.OP_GOTO, at_line=line_num)
+        self.emitCode(op_code=OpCode.OP_JMP, at_line=line_num)
         goto_ip_location = self.getNextIPLocation()
         self.emitByte(byte=goto_entity.instruction_pointer_location, at_line=line_num) #this byte will get modified later on 
         goto_entity.instruction_pointer_location = goto_ip_location
@@ -522,7 +522,7 @@ class Compiler:
             else:
                 break
 
-        self.emitCode(op_code=OpCode.OP_GOTO, at_line=line_num)
+        self.emitCode(op_code=OpCode.OP_JMP, at_line=line_num)
         goto_ip_location = self.getNextIPLocation()
         self.emitByte(byte=goto_entity.instruction_pointer_location, at_line=line_num)
         goto_entity.instruction_pointer_location = goto_ip_location
@@ -758,7 +758,7 @@ class Compiler:
         #check if continue statement is defined in the block_statment
         continue_entity = self.peekContinueEntity()
         if index := continue_entity.instruction_pointer_location:
-            modified_ip = self.getInstructionPointerSize()
+            modified_ip = self.getInstructionPointerSize()-1 - index  #this relative position points upwards
             self.modifyByteAt(byte=modified_ip, index=index)
 
 
@@ -766,7 +766,7 @@ class Compiler:
     #check if break statement is defined in the block_statment
         break_entity = self.peekBreakEntity()
         if index := break_entity.instruction_pointer_location:
-            modified_ip = self.getInstructionPointerSize()
+            modified_ip = self.getInstructionPointerSize()-1 - index #this relative position points downwards
             self.modifyByteAt(byte=modified_ip, index=index)
 
     def visitGetExpression(self, get_expression):
