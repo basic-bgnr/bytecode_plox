@@ -62,6 +62,9 @@ class Compiler:
     def pushIntoDeferredFunctionsList(self, function_statement):
         self.deferred_functions_list.append(function_statement)
 
+    def peekDeferredFunctionsList(self):
+        return self.deferred_functions_list[-1]
+
     def popDeferredFunctionsList(self):
         return self.deferred_functions_list.pop()
 
@@ -69,7 +72,9 @@ class Compiler:
         self.is_inside_class = value
 
     def isInsideClass(self):
-        return self.is_inside_class
+        #to do remove it 
+        #return self.is_inside_class
+        return self.getScopeDepth() > 0
 
     def peekBreakEntityAt(self):
         for entity in reversed(self.break_modifier_entities):
@@ -127,15 +132,15 @@ class Compiler:
     def setScopeDepth(self, scope_depth):
         self.scope_depth = scope_depth
 
-    def getscopeDepth(self):
+    def getScopeDepth(self):
         return self.scope_depth
 
     def advanceScopeDepth(self):
         # breakpoint()
-        return self.setScopeDepth(self.getscopeDepth() + 1)
+        return self.setScopeDepth(self.getScopeDepth() + 1)
 
     def reverseScopeDepth(self):
-        return self.setScopeDepth(self.getscopeDepth() - 1)
+        return self.setScopeDepth(self.getScopeDepth() - 1)
 
     def getScopeEntitiesSize(self):
         return len(self.scope_entities)
@@ -163,10 +168,7 @@ class Compiler:
     def compileAll(self, AST):
         line_num = 0
         for AS in AST:
-            if isinstance(AS, FunctionStatement) or isinstance(AS, ClassStatement):
-                self.pushIntoDeferredFunctionsList(AS)
-            else:
-                line_num = self.compile(AS)
+            line_num = self.compile(AS)
             # if self.compile(AS) is None:
             #   raise Expception("none occured ", AS)
 
@@ -185,7 +187,7 @@ class Compiler:
         self.emitCode(op_code=OpCode.OP_HALT, at_line=line_num)
 
         while not self.isDeferredFunctionsListEmpty():
-            function_to_compile = self.popDeferredFunctionsList()
+            function_to_compile = self.peekDeferredFunctionsList()
             self.compile(function_to_compile)
 
 
@@ -193,7 +195,15 @@ class Compiler:
 
 
     def compile(self, AS):
+        # breakpoint()
         if AS is not None:
+            if isinstance(AS, FunctionStatement) or isinstance(AS, ClassStatement):
+                if not self.checkIfDeferred(function_statement=AS):
+                    self.pushIntoDeferredFunctionsList(AS)
+                    return
+                else:
+                    self.popDeferredFunctionsList()
+            
             return AS.linkVisitor(self)
 
     def makeConstant(self, constant):
@@ -372,7 +382,7 @@ class Compiler:
     def endScope(self, line_num, is_function_statement=False):
         self.reverseScopeDepth()
         # this is for calculating the number of times we need to pop, to remove the local variable from stack
-        while not self.isScopeEntitiesEmpty() and self.getLastScopeEntityDepth() > self.getscopeDepth():
+        while not self.isScopeEntitiesEmpty() and self.getLastScopeEntityDepth() > self.getScopeDepth():
             if not is_function_statement:# function caller is responsible for popping
                 self.emitCode(OpCode.OP_POP, at_line=line_num)
             self.popScopeEntity()
@@ -437,7 +447,7 @@ class Compiler:
             return self.addGlobalReassignment(reassignment_statement)
     
     def isLocal(self):
-        return self.getscopeDepth()>0
+        return self.getScopeDepth()>0
 
     def addGlobalReassignment(self, reassignment_statement):
         line_num = self.compile(reassignment_statement.rvalue)
@@ -464,7 +474,7 @@ class Compiler:
         #################################################################
         lvalue_name = assignment_statement.lvalue.expr.literal #local variable name
 
-        scope_entity = ScopeEntity(name=lvalue_name, scope_depth=self.getscopeDepth())
+        scope_entity = ScopeEntity(name=lvalue_name, scope_depth=self.getScopeDepth())
         self.addScopeEntity(scope_entity)
         #################################################################
 
@@ -590,8 +600,8 @@ class Compiler:
         # add the value in the stack in reverse order, this is done so because resolveVariable functoion reversee the varaible is order to  simulate stack
         ####two dummy value to simulate caller convention#######
 
-        self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=self.getscopeDepth(), index = -1) , default=False)
-        self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=self.getscopeDepth(), index = -2), default=False)
+        self.addScopeEntity(ScopeEntity(name="@ebp", scope_depth=self.getScopeDepth(), index = -1) , default=False)
+        self.addScopeEntity(ScopeEntity(name="@retptr", scope_depth=self.getScopeDepth(), index = -2), default=False)
 
 
         #######################################################
@@ -599,7 +609,7 @@ class Compiler:
         indices = count(start=-3, step=-1)
 
         for index, param in zip(indices, reversed(function_statement.params_list)):
-            self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=self.getscopeDepth(), index=index), default=False)
+            self.addScopeEntity(ScopeEntity(name=param.expr.literal, scope_depth=self.getScopeDepth(), index=index), default=False)
 
         middle_point = self.getScopeEntitiesSize()
         self.makeScopeEntititiesRelativeTo(datum=middle_point)
@@ -736,8 +746,8 @@ class Compiler:
 
     def visitWhileStatement(self, while_statement):
 
-        self.pushBreakEntity(break_entity=LoopModifierEntity(parent_loop_scope_depth=self.getscopeDepth(), instruction_pointer_location=None))#we don't know the ip location now
-        self.pushContinueEntity(continue_entity=LoopModifierEntity(parent_loop_scope_depth=self.getscopeDepth(), instruction_pointer_location=None))#we don't know the ip location now
+        self.pushBreakEntity(break_entity=LoopModifierEntity(parent_loop_scope_depth=self.getScopeDepth(), instruction_pointer_location=None))#we don't know the ip location now
+        self.pushContinueEntity(continue_entity=LoopModifierEntity(parent_loop_scope_depth=self.getScopeDepth(), instruction_pointer_location=None))#we don't know the ip location now
 
         top_label_instruction_pointer = self.getInstructionPointerSize() # this points to below expression
 
