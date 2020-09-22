@@ -206,6 +206,13 @@ class Compiler:
             
             return AS.linkVisitor(self)
 
+    #this is special case to handle class function, it is because the class needs to be compiled as a whole
+    #the methods of a class needs to have it's ip fixed so all methods must be compiled in a single step without being deferred
+    #if the class method contains other function, it is deferred and occupies global namespace, incase of sub function
+    #the actual code is handled by above function `compile`, it is deferred. 
+    #is_inside_class is set to true while handling actual class method but when compiling submethod defined wihthin actual
+    #class method, it is deferred until all class method is compiled. After that is_inside_class is set to False and the deferred 
+    #sub function occupies global namespace.
     def compileClassFunction(self, AS):
         if AS is not None:
             return AS.linkVisitor(self)
