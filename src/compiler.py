@@ -73,8 +73,8 @@ class Compiler:
 
     def isInsideClass(self):
         #to do remove it 
-        #return self.is_inside_class
-        return self.getScopeDepth() > 0
+        return self.is_inside_class
+        # return self.getScopeDepth() > 0
 
     def peekBreakEntityAt(self):
         for entity in reversed(self.break_modifier_entities):
@@ -204,6 +204,10 @@ class Compiler:
                 else:
                     self.popDeferredFunctionsList()
             
+            return AS.linkVisitor(self)
+
+    def compileClassFunction(self, AS):
+        if AS is not None:
             return AS.linkVisitor(self)
 
     def makeConstant(self, constant):
@@ -863,7 +867,7 @@ class Compiler:
 
             ip = self.getNextIPLocation()
  
-            line_num = self.compile(method)
+            line_num = self.compileClassFunction(method)
             
             
 

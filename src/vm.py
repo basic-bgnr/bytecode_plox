@@ -112,6 +112,7 @@ class Vm:
     def exec(self, current_op_code):
         # breakpoint()
         if (current_op_code == OpCode.OP_HALT):
+            # breakpoint()
             raise RuntimeHalt(message="Halted")
 
         elif (current_op_code == OpCode.OP_LOAD_CONSTANT):
