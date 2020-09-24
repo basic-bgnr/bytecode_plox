@@ -387,7 +387,7 @@ class Vm:
                 
                 custom_function = callable_object.value
                 #int(num_args_value) is required because its floating point by default
-                args = [self.peekStack(i + self.getEBP()) for i in reversed(range(-3 - int(num_args.value) + 1, -3+1))]
+                args = [self.peekStack(i + self.getEBP()) for i in range(-3 - int(num_args.value) + 1, -3+1)]
 
                 try:                
                     return_value = custom_function.call(*args) #

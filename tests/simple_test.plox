@@ -844,6 +844,45 @@ class List {
   };
 };
 
+class HashMap {
+
+  fun set(key, value){
+      Runtime.setProperty(this, key, value);
+  };
+
+  fun get(key){
+    return Runtime.getProperty(this, key);
+  };
+
+};
+
+
+class Array {
+
+  fun Array(){
+          this._length = 0;
+          return this;
+   };
+
+  fun push(val){
+    Runtime.setProperty(this, this._length, val);
+    this._length += 1;
+    return this;
+  };
+
+  fun at(index){
+    return Runtime.getProperty(this, index);
+  };
+
+  fun length(){
+    return this._length;
+  };
+
+
+};
+
+
+
 fun main(){
       # var range = List.rangeStep(1, 5, 0.5);
 

@@ -22,6 +22,14 @@ class NativeFunctions(Enum):
     TYPE   = 'type',
     EXIT   = 'exit',
 
+class RuntimeFunctions(Enum):
+    GETPROPERTY = 'getProperty',
+    SETPROPERTY = 'setProperty',
+
+class StringFunctions(Enum):
+    AT = 'at',
+    CHUNK = 'chunk',
+
 
 class NativeModuleGenerator:
 
@@ -99,8 +107,17 @@ class NativeModuleGenerator:
         STR_FUNCTION = NativeFunctionObject(name=STR_FUNCTION_IDENTIFIER, arity=1)
         STR_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.STRING, value=str(x.value)))
 
-        STRING_CLASS.value.setMethodName(method_name=STR_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=STR_FUNCTION))
+        AT_FUNCTION_IDENTIFIER = StringFunctions.AT.value[0]
+        AT_FUNCTION = NativeFunctionObject(name=AT_FUNCTION_IDENTIFIER, arity=2)
+        AT_FUNCTION.setFunction(lambda obj, index: MasterData(tipe=LanguageTypes.STRING, value=obj.value[int(index.value)]))
 
+        CHUNK_FUNCTION_IDENTIFIER = StringFunctions.CHUNK.value[0]
+        CHUNK_FUNCTION = NativeFunctionObject(name=CHUNK_FUNCTION_IDENTIFIER, arity=3)
+        CHUNK_FUNCTION.setFunction(lambda obj, start, end: MasterData(tipe=LanguageTypes.STRING, value=obj.value[int(start.value):int(end.value)]))
+
+        STRING_CLASS.value.setMethodName(method_name=STR_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=STR_FUNCTION))
+        STRING_CLASS.value.setMethodName(method_name=AT_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=AT_FUNCTION))
+        STRING_CLASS.value.setMethodName(method_name=CHUNK_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=CHUNK_FUNCTION))
 
         return STRING_CLASS
 
@@ -119,7 +136,32 @@ class NativeModuleGenerator:
         EXIT_FUNCTION = NativeFunctionObject(name=EXIT_FUNCTION_IDENTIFIER, arity=1)
         EXIT_FUNCTION.setFunction(lambda x: exit(int(x.value)))
 
-        RUNTIME_CLASS.value.setMethodName(method_name=EXIT_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=EXIT_FUNCTION))
 
+        SETPROPERTY_FUNCTION_IDENTIFIER = RuntimeFunctions.SETPROPERTY.value[0]
+        SETPROPERTY_FUNCTION = NativeFunctionObject(name=SETPROPERTY_FUNCTION_IDENTIFIER, arity=3)
+        def _set_property(obj, lvalue, rvalue):
+            if obj.tipe == LanguageTypes.INSTANCE:
+                obj.value.setProperty(lvalue.value, rvalue)
+            else:
+                raise Exception(f"Expecting: Instance, found: {obj.tipe}")
+        SETPROPERTY_FUNCTION.setFunction(_set_property)
+
+        GETPROPERTY_FUNCTION_IDENTIFIER = RuntimeFunctions.GETPROPERTY.value[0]
+        GETPROPERTY_FUNCTION = NativeFunctionObject(name=GETPROPERTY_FUNCTION_IDENTIFIER, arity=2)
+        def _get_property(obj, prop):
+            if obj.tipe == LanguageTypes.INSTANCE:
+                try:
+                    return obj.value.getProperty(prop.value)
+                except KeyError as e:
+                    raise Exception(f"no property {prop} found in {obj}")
+            else:
+                raise Exception(f"Expecting: Instance, found: {obj.tipe}")
+        GETPROPERTY_FUNCTION.setFunction(_get_property)
+
+
+
+        RUNTIME_CLASS.value.setMethodName(method_name=EXIT_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=EXIT_FUNCTION))
+        RUNTIME_CLASS.value.setMethodName(method_name=SETPROPERTY_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=SETPROPERTY_FUNCTION))
+        RUNTIME_CLASS.value.setMethodName(method_name=GETPROPERTY_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=GETPROPERTY_FUNCTION))
 
         return RUNTIME_CLASS
