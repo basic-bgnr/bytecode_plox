@@ -406,13 +406,13 @@ class Vm:
                 #int(num_args_value) is required because its floating point by default
                 return_instance = custom_class.call()
 
-                if num_args.value > 0:
+                try:# to find the constructor function, if it's not found goto except clause
                     ##########################simulate functon call####################
                     self.pushThisList(return_instance) # now this refers to
                     constructor_function = return_instance.value.getProperty(custom_class.name)
                     self.setIP(constructor_function.value.ip) #return the constructor function
                     ##################################################################
-                else:
+                except KeyError:
                     self.pushStack(return_instance) # this is just a formality, function value must be put on the stack, its cleaned during stackcleanup. But before that we set the ebx register
                     self.setEBX(return_instance)
                     #we avoid stackcleanup here, because we manually set the ip to constructor function which separately calls for cleaning the stack
