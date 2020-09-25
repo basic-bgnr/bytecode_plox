@@ -29,6 +29,7 @@ class RuntimeFunctions(Enum):
 class StringFunctions(Enum):
     AT = 'at',
     CHUNK = 'chunk',
+    LENGTH = 'length',
 
 
 class NativeModuleGenerator:
@@ -115,9 +116,19 @@ class NativeModuleGenerator:
         CHUNK_FUNCTION = NativeFunctionObject(name=CHUNK_FUNCTION_IDENTIFIER, arity=3)
         CHUNK_FUNCTION.setFunction(lambda obj, start, end: MasterData(tipe=LanguageTypes.STRING, value=obj.value[int(start.value):int(end.value)]))
 
+        LENGTH_FUNCTION_IDENTIFIER = StringFunctions.LENGTH.value[0]
+        LENGTH_FUNCTION = NativeFunctionObject(name=LENGTH_FUNCTION_IDENTIFIER, arity=1)
+        def _length(obj):
+            try:
+                return MasterData(tipe=LanguageTypes.NUMBER, value=len(obj.value))
+            except:
+                raise Exception(f"Expecting: String, found: {obj.tipe}")
+        LENGTH_FUNCTION.setFunction(_length)
+
         STRING_CLASS.value.setMethodName(method_name=STR_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=STR_FUNCTION))
         STRING_CLASS.value.setMethodName(method_name=AT_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=AT_FUNCTION))
         STRING_CLASS.value.setMethodName(method_name=CHUNK_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=CHUNK_FUNCTION))
+        STRING_CLASS.value.setMethodName(method_name=LENGTH_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=LENGTH_FUNCTION))
 
         return STRING_CLASS
 
