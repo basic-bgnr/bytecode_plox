@@ -4,14 +4,15 @@ from enum import Enum
 
 ###for native functionality only 
 import time
-import random 
+import random
 
 class NativeModules(Enum):
-    NUMBER = 'Number',
-    RANDOM = 'Random',
-    STRING = 'String',
-    TIME   = 'Time',
+    NUMBER  = 'Number',
+    RANDOM  = 'Random',
+    STRING  = 'String',
+    TIME    = 'Time',
     RUNTIME = 'Runtime',
+    IO      = 'IO',
 
 
 class NativeFunctions(Enum):
@@ -27,9 +28,14 @@ class RuntimeFunctions(Enum):
     SETPROPERTY = 'setProperty',
 
 class StringFunctions(Enum):
-    AT = 'at',
-    CHUNK = 'chunk',
+    AT     = 'at',
+    CHUNK  = 'chunk',
     LENGTH = 'length',
+
+class IOFunctions(Enum):
+    READFILE = 'readFile',
+    WRITEFILE = 'writeFile',
+
 
 
 class NativeModuleGenerator:
@@ -42,7 +48,8 @@ class NativeModuleGenerator:
                        NativeModuleGenerator.generateRandomModule(),
                        NativeModuleGenerator.generateStringModule(),
                        NativeModuleGenerator.generateTimeModule(),
-                       NativeModuleGenerator.generateRuntimeModule(),]
+                       NativeModuleGenerator.generateRuntimeModule(),
+                       NativeModuleGenerator.generateIOModule(),]
 
         # number_module = NativeModuleGenerator.generateNumberModule()
         # random_module = NativeModuleGenerator.generateRandomModule()
@@ -139,9 +146,7 @@ class NativeModuleGenerator:
         
         TYPE_FUNCTION_IDENTIFIER = NativeFunctions.TYPE.value[0]
         TYPE_FUNCTION = NativeFunctionObject(name=TYPE_FUNCTION_IDENTIFIER, arity=1)
-        TYPE_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.TYPE, value=x.tipe.name))
-
-        RUNTIME_CLASS.value.setMethodName(method_name=TYPE_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=TYPE_FUNCTION))
+        TYPE_FUNCTION.setFunction(lambda x: MasterData(tipe=LanguageTypes.TYPE, value=x.tipe.name))        
 
         EXIT_FUNCTION_IDENTIFIER = NativeFunctions.EXIT.value[0]
         EXIT_FUNCTION = NativeFunctionObject(name=EXIT_FUNCTION_IDENTIFIER, arity=1)
@@ -170,9 +175,45 @@ class NativeModuleGenerator:
         GETPROPERTY_FUNCTION.setFunction(_get_property)
 
 
-
+        RUNTIME_CLASS.value.setMethodName(method_name=TYPE_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=TYPE_FUNCTION))
         RUNTIME_CLASS.value.setMethodName(method_name=EXIT_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=EXIT_FUNCTION))
         RUNTIME_CLASS.value.setMethodName(method_name=SETPROPERTY_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=SETPROPERTY_FUNCTION))
         RUNTIME_CLASS.value.setMethodName(method_name=GETPROPERTY_FUNCTION_IDENTIFIER, method=MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=GETPROPERTY_FUNCTION))
 
         return RUNTIME_CLASS
+
+
+    @staticmethod
+    def generateIOModule():
+
+        IO_CLASS = MasterData(tipe=LanguageTypes.CLASS, value=ClassObj(name=NativeModules.IO.value[0]))
+
+        READ_FUNCTION_IDENTIFIER = IOFunctions.READFILE.value[0]
+        READ_FUNCTION = NativeFunctionObject(name=READ_FUNCTION_IDENTIFIER, arity=1)
+        def _read(location):
+            try:
+                with open(location.value, 'rt', encoding='ascii') as file_handle:
+                    native_string = file_handle.read()
+                    return MasterData(tipe=LanguageTypes.STRING, value=native_string)
+            except Exception as e:
+                print 
+                raise Exception(f"error while reading file {location.value} {e.args[0]}")
+
+        READ_FUNCTION.setFunction(_read)
+
+        WRITE_FUNCTION_IDENTIFIER = IOFunctions.WRITEFILE.value[0]
+        WRITE_FUNCTION = NativeFunctionObject(name=WRITE_FUNCTION_IDENTIFIER, arity=2)
+        def _write(location, string):
+            try:
+                with open(location.value, 'wt', encoding='ascii') as file_handle:
+                    file_handle.write(string.value)
+            except Exception as e:
+                raise Exception(f"error while writing file {location.value} {e.args[0]}")
+
+        WRITE_FUNCTION.setFunction(_write)
+
+        IO_CLASS.value.setMethodName(method_name=READ_FUNCTION_IDENTIFIER, method= MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=READ_FUNCTION))
+        IO_CLASS.value.setMethodName(method_name=WRITE_FUNCTION_IDENTIFIER, method= MasterData(tipe=LanguageTypes.NATIVE_FUNCTION, value=WRITE_FUNCTION))
+
+
+        return IO_CLASS
