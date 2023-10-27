@@ -774,17 +774,19 @@ class Parser:
         return self.logicalExpr()
 
     def logicalExpr(self):
-        left_expr = self.comparisonExpr()
-        if self.peek().tipe in [TokenType.AND, TokenType.OR]:
+        expr = self.comparisonExpr()
+
+        while self.peek().tipe in [TokenType.AND, TokenType.OR]:
             operator = self.advance()  # return `and` or `or`
-            right_expr = self.logicalExpr()
-            return BinaryExpression(left_expr, operator, right_expr)
-        return left_expr
+            right_expr = self.comparisonExpr()
+            expr = BinaryExpression(expr, operator, right_expr)
+
+        return expr
 
     def comparisonExpr(self):
-        left_expr = self.additionExpr()
+        expr = self.additionExpr()
 
-        if self.peek().tipe in [
+        while self.peek().tipe in [
             TokenType.EQUAL_EQUAL,
             TokenType.BANG_EQUAL,
             TokenType.GREATER,
@@ -793,27 +795,29 @@ class Parser:
             TokenType.LESS_EQUAL,
         ]:
             operator = self.advance()  # consume the operator and move forward
-            right_expr = self.comparisonExpr()
-            return BinaryExpression(left_expr, operator, right_expr)
-        return left_expr
+            right_expr = self.additionExpr()
+            expr = BinaryExpression(expr, operator, right_expr)
+
+        return expr
 
     def additionExpr(self):
-        left_expr = self.multiplicationExpr()
+        expr = self.multiplicationExpr()
 
-        if self.peek().tipe in [TokenType.PLUS, TokenType.MINUS]:
+        while self.peek().tipe in [TokenType.PLUS, TokenType.MINUS]:
             operator = self.advance()
-            right_expr = self.additionExpr()
-            return BinaryExpression(left_expr, operator, right_expr)
+            right_expr = self.multiplicationExpr()
+            expr = BinaryExpression(expr, operator, right_expr)
 
-        return left_expr
+        return expr
 
     def multiplicationExpr(self):
-        left_expr = self.unitaryExpr()
-        if self.peek().tipe in [TokenType.STAR, TokenType.SLASH, TokenType.MODULO]:
+        expr = self.unitaryExpr()
+        while self.peek().tipe in [TokenType.STAR, TokenType.SLASH, TokenType.MODULO]:
             operator = self.advance()  # consume the operator
-            right_expr = self.multiplicationExpr()
-            return BinaryExpression(left_expr, operator, right_expr)
-        return left_expr
+            right_expr = self.unitaryExpr()
+            expr = BinaryExpression(expr, operator, right_expr)
+
+        return expr
 
     def unitaryExpr(self):
         if self.peek().tipe in [TokenType.BANG, TokenType.MINUS, TokenType.PLUS]:
